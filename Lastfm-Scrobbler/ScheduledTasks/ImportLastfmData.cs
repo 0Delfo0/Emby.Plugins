@@ -18,32 +18,23 @@
 
     class ImportLastfmData : IScheduledTask
     {
-        private readonly IUserManager     _userManager;
-        private readonly LastfmApiClient  _apiClient;
+        private readonly IUserManager _userManager;
+        private readonly LastfmApiClient _apiClient;
         private readonly IUserDataManager _userDataManager;
 
         public ImportLastfmData(IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
         {
-            _userManager     = userManager;
+            _userManager = userManager;
             _userDataManager = userDataManager;
-            
+
             _apiClient = new LastfmApiClient(httpClient, jsonSerializer);
         }
 
-        public string Name
-        {
-            get { return "Import Last.fm Data"; }
-        }
+        public string Name => "Import Last.fm Data";
 
-        public string Category
-        {
-            get { return "Last.fm"; }
-        }
+        public string Category => "Last.fm";
 
-        public string Description
-        {
-            get { return "Import play counts and favourite tracks for each user with Last.fm accounted configured"; }
-        }
+        public string Description => "Import play counts and favourite tracks for each user with Last.fm accounted configured";
 
         public IEnumerable<ITaskTrigger> GetDefaultTriggers()
         {
@@ -55,11 +46,12 @@
 
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-             //Get all users
-            var users = _userManager.Users.Where(u => {
+            //Get all users
+            var users = _userManager.Users.Where(u =>
+            {
                 var user = UserHelpers.GetUser(u);
-                
-                return user != null && !String.IsNullOrWhiteSpace(user.SessionKey);
+
+                return user != null && !string.IsNullOrWhiteSpace(user.SessionKey);
             }).ToList();
 
             if (users.Count == 0)
@@ -71,15 +63,15 @@
             Plugin.Syncing = true;
 
             var usersProcessed = 0;
-            var totalUsers     = users.Count;
+            var totalUsers = users.Count;
 
             foreach (var user in users)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var progressOffset = ((double) usersProcessed++/totalUsers);
-                var maxProgressForStage = ((double) usersProcessed/totalUsers);
-                
+                var progressOffset = (double) usersProcessed++ / totalUsers;
+                var maxProgressForStage = (double) usersProcessed / totalUsers;
+
 
                 await SyncDataforUserByArtistBulk(user, progress, cancellationToken, maxProgressForStage, progressOffset);
             }
@@ -87,18 +79,18 @@
             Plugin.Syncing = false;
         }
 
-        
+
         private async Task SyncDataforUserByArtistBulk(User user, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
-            var artists    = user.RootFolder.GetRecursiveChildren().OfType<MusicArtist>().ToList();
+            var artists = user.RootFolder.GetRecursiveChildren().OfType<MusicArtist>().ToList();
             var lastFmUser = UserHelpers.GetUser(user);
 
-            var totalSongs   = 0;
+            var totalSongs = 0;
             var matchedSongs = 0;
 
             //Get loved tracks
             var lovedTracksReponse = await _apiClient.GetLovedTracks(lastFmUser).ConfigureAwait(false);
-            var hasLovedTracks     = lovedTracksReponse.HasLovedTracks();
+            var hasLovedTracks = lovedTracksReponse.HasLovedTracks();
 
             //Get entire library
             var usersTracks = await GetUsersLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
@@ -143,7 +135,7 @@
 
                     var matchedSong = Helpers.FindMatchedLastfmSong(artistTracksList, song);
 
-                    if(matchedSong == null)
+                    if (matchedSong == null)
                         continue;
 
                     //We have found a match
@@ -158,8 +150,8 @@
                     {
                         //Use MBID if set otherwise match on song name
                         var favourited = lovedTracksReponse.LovedTracks.Tracks.Any(
-                            t =>  String.IsNullOrWhiteSpace(t.MusicBrainzId) 
-                                ? StringHelper.IsLike(t.Name, matchedSong.Name) 
+                            t => string.IsNullOrWhiteSpace(t.MusicBrainzId)
+                                ? StringHelper.IsLike(t.Name, matchedSong.Name)
                                 : t.MusicBrainzId.Equals(matchedSong.MusicBrainzId)
                         );
 
@@ -187,13 +179,13 @@
 
             //The percentage might not actually be correct but I'm pretty tired and don't want to think about it
             Plugin.Logger.Info("Finished import Last.fm library for {0}. Local Songs: {1} | Last.fm Songs: {2} | Matched Songs: {3} | {4}% match rate",
-                user.Name, totalSongs, usersTracks.Count, matchedSongs, Math.Round(((double)matchedSongs / Math.Min(usersTracks.Count, totalSongs)) * 100));
+                user.Name, totalSongs, usersTracks.Count, matchedSongs, Math.Round((double) matchedSongs / Math.Min(usersTracks.Count, totalSongs) * 100));
         }
 
         private async Task<List<LastfmTrack>> GetUsersLibrary(LastfmUser lastfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
-            var tracks     = new List<LastfmTrack>();
-            var page       = 1; //Page 0 = 1
+            var tracks = new List<LastfmTrack>();
+            var page = 1; //Page 0 = 1
             bool moreTracks;
 
             do
@@ -210,10 +202,10 @@
                 moreTracks = !response.Tracks.Metadata.IsLastPage();
 
                 //Only report progress in download because it will be 90% of the time taken
-                var currentProgress = ((double)response.Tracks.Metadata.Page / response.Tracks.Metadata.TotalPages) * (maxProgress - progressOffset) + progressOffset;
-                
+                var currentProgress = (double) response.Tracks.Metadata.Page / response.Tracks.Metadata.TotalPages * (maxProgress - progressOffset) + progressOffset;
+
                 Plugin.Logger.Debug("Progress: " + currentProgress * 100);
-                
+
                 progress.Report(currentProgress * 100);
             } while (moreTracks);
 

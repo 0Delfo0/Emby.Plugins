@@ -17,11 +17,11 @@
             var md5 = MD5.Create();
 
             var inputBytes = Encoding.ASCII.GetBytes(input);
-            var hashBytes  = md5.ComputeHash(inputBytes);
+            var hashBytes = md5.ComputeHash(inputBytes);
 
             // Convert the byte array to hexadecimal string
             var sb = new StringBuilder();
-            
+
             foreach (byte b in hashBytes)
                 sb.Append(b.ToString("X2"));
 
@@ -52,7 +52,7 @@
 
         public static string DictionaryToQueryString(Dictionary<string, string> data)
         {
-            return String.Join("&", data.Where(k => !String.IsNullOrWhiteSpace(k.Value)).Select(kvp => String.Format("{0}={1}", Uri.EscapeUriString(kvp.Key), Uri.EscapeUriString(kvp.Value))));
+            return string.Join("&", data.Where(k => !string.IsNullOrWhiteSpace(k.Value)).Select(kvp => string.Format("{0}={1}", Uri.EscapeUriString(kvp.Key), Uri.EscapeUriString(kvp.Value))));
         }
 
         private static string CreateSignature(Dictionary<string, string> data)
@@ -60,7 +60,7 @@
             var s = new StringBuilder();
 
             foreach (var item in data.OrderBy(x => x.Key))
-                s.Append(String.Format("{0}{1}", item.Key, item.Value));
+                s.Append(string.Format("{0}{1}", item.Key, item.Value));
 
             //Append seceret
             s.Append(Strings.Keys.LastfmApiSeceret);
@@ -72,18 +72,18 @@
         public static string GetMusicBrainzArtistId(MusicArtist artist)
         {
             string mbArtistId;
-            
+
             if (artist.ProviderIds == null)
             {
                 Plugin.Logger.Debug("No provider id: {0}", artist.Name);
                 return null;
             }
 
-            if (artist.ProviderIds.TryGetValue("MusicBrainzArtist", out mbArtistId)) 
+            if (artist.ProviderIds.TryGetValue("MusicBrainzArtist", out mbArtistId))
                 return mbArtistId;
 
             Plugin.Logger.Debug("No MBID: {0}", artist.Name);
-            
+
             return null;
         }
 

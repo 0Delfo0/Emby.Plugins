@@ -6,7 +6,7 @@
     [DataContract]
     public class LovedTracksResponse : BaseResponse
     {
-        [DataMember(Name="lovedtracks")]
+        [DataMember(Name = "lovedtracks")]
         public LovedTracks LovedTracks { get; set; }
 
         public bool HasLovedTracks()

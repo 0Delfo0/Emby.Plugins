@@ -8,7 +8,7 @@
     /// </summary>
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public LastfmUser[] LastfmUsers { get; set; }
+        public LastfmUser[] LastfmUsers { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PluginConfiguration" /> class.

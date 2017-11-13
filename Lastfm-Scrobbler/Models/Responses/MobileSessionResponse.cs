@@ -5,7 +5,7 @@
     [DataContract]
     public class MobileSessionResponse : BaseResponse
     {
-        [DataMember(Name="session")]
+        [DataMember(Name = "session")]
         public MobileSession Session { get; set; }
     }
 }

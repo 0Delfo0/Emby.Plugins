@@ -5,7 +5,7 @@
     [DataContract]
     public class BaseLastfmTrack
     {
-        [DataMember(Name="artist")]
+        [DataMember(Name = "artist")]
         public LastfmArtist Artist { get; set; }
 
         [DataMember(Name = "name")]
@@ -18,7 +18,7 @@
     [DataContract]
     public class LastfmArtist
     {
-        [DataMember(Name="name")]
+        [DataMember(Name = "name")]
         public string Name { get; set; }
 
         [DataMember(Name = "mbid")]
@@ -32,7 +32,7 @@
     [DataContract]
     public class LastfmTrack : BaseLastfmTrack
     {
-        [DataMember(Name="playcount")]
+        [DataMember(Name = "playcount")]
         public int PlayCount { get; set; }
     }
 }

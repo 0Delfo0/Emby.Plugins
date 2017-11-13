@@ -5,10 +5,10 @@
     [DataContract]
     public class BaseResponse
     {
-        [DataMember(Name="message")]
+        [DataMember(Name = "message")]
         public string Message { get; set; }
 
-        [DataMember(Name="error")]
+        [DataMember(Name = "error")]
         public int ErrorCode { get; set; }
 
         public bool IsError()

@@ -6,7 +6,7 @@
     [DataContract]
     public class GetTracksResponse : BaseResponse
     {
-        [DataMember(Name="tracks")]
+        [DataMember(Name = "tracks")]
         public GetTracksTracks Tracks { get; set; }
 
         public bool HasTracks()
@@ -18,7 +18,7 @@
     [DataContract]
     public class GetTracksTracks
     {
-        [DataMember(Name="track")]
+        [DataMember(Name = "track")]
         public List<LastfmTrack> Tracks { get; set; }
 
         [DataMember(Name = "@attr")]

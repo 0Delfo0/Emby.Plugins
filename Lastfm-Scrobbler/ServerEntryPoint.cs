@@ -2,7 +2,7 @@
 {
     using Api;
     using Configuration;
-    using MediaBrowser.Common.Net;   
+    using MediaBrowser.Common.Net;
     using MediaBrowser.Controller.Entities.Audio;
     using MediaBrowser.Controller.Library;
     using MediaBrowser.Controller.Plugins;
@@ -18,7 +18,7 @@
     /// </summary>
     public class ServerEntryPoint : IServerEntryPoint
     {
-        private readonly ISessionManager  _sessionManager;
+        private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
 
         private LastfmApiClient _apiClient;
@@ -33,11 +33,11 @@
         {
             Plugin.Logger = logManager.GetLogger(Plugin.Instance.Name);
 
-            _sessionManager  = sessionManager;
+            _sessionManager = sessionManager;
             _userDataManager = userDataManager;
 
             _apiClient = new LastfmApiClient(httpClient, jsonSerializer);
-            
+
             Instance = this;
         }
 
@@ -47,9 +47,9 @@
         public void Run()
         {
             //Bind events
-            _sessionManager.PlaybackStart   += PlaybackStart;
+            _sessionManager.PlaybackStart += PlaybackStart;
             _sessionManager.PlaybackStopped += PlaybackStopped;
-            _userDataManager.UserDataSaved  += UserDataSaved;
+            _userDataManager.UserDataSaved += UserDataSaved;
         }
 
         /// <summary>
@@ -115,7 +115,7 @@
                 return;
             }
 
-            var playPercent = ((double)e.PlaybackPositionTicks / item.RunTimeTicks) * 100;
+            var playPercent = (double) e.PlaybackPositionTicks / item.RunTimeTicks * 100;
             if (playPercent < 80)
             {
                 Plugin.Logger.Debug("'{0}' only played {1}%, not scrobbling", item.Name, playPercent);
@@ -207,13 +207,12 @@
         public void Dispose()
         {
             //Unbind events
-            _sessionManager.PlaybackStart   -= PlaybackStart;
+            _sessionManager.PlaybackStart -= PlaybackStart;
             _sessionManager.PlaybackStopped -= PlaybackStopped;
-            _userDataManager.UserDataSaved  -= UserDataSaved;
+            _userDataManager.UserDataSaved -= UserDataSaved;
 
             //Clean up
             _apiClient = null;
-
         }
     }
 }
