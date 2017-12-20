@@ -1,35 +1,28 @@
-﻿namespace LastfmScrobbler.Utils
-{
-    using MediaBrowser.Controller.Entities;
-    using Models;
-    using System;
-    using System.Linq;
+﻿using System;
+using System.Linq;
+using Lastfm.Configuration.Model;
+using MediaBrowser.Controller.Entities;
 
+namespace Lastfm.Utils
+{
     public static class UserHelpers
     {
-        public static LastfmUser GetUser(User user)
+        public static LfmUser GetUser(User user)
         {
-            if (user == null)
+            if(user == null)
                 return null;
 
-            if (Plugin.Instance.PluginConfiguration.LastfmUsers == null)
-                return null;
-
-            return GetUser(user.Id);
+            return Plugin.Instance.PluginConfiguration.LfmUsers == null ? null : GetUser(user.Id);
         }
 
-        public static LastfmUser GetUser(Guid userId)
+        private static LfmUser GetUser(Guid userId)
         {
-            return Plugin.Instance.PluginConfiguration.LastfmUsers.FirstOrDefault(u => u.MediaBrowserUserId.Equals(userId));
+            return Plugin.Instance.PluginConfiguration.LfmUsers.FirstOrDefault(u => u.MediaBrowserUserId.Equals(userId));
         }
 
-        public static LastfmUser GetUser(string userGuid)
+        public static LfmUser GetUser(string userGuid)
         {
-            Guid g;
-            if (Guid.TryParse(userGuid, out g))
-                return GetUser(g);
-
-            return null;
+            return Guid.TryParse(userGuid, out Guid g) ? GetUser(g) : null;
         }
     }
 }

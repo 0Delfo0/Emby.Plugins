@@ -1,18 +1,18 @@
-﻿namespace LastfmScrobbler.Models.Requests
-{
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace Lastfm.Api.Model.Requests
+{
     public class TrackLoveRequest : BaseAuthedRequest
     {
-        public string Track { get; set; }
-        public string Artist { get; set; }
-
+        public string track { get; set; }
+        public string artist { get; set; }
+        
         public override Dictionary<string, string> ToDictionary()
         {
             return new Dictionary<string, string>(base.ToDictionary())
             {
-                {"track", Track},
-                {"artist", Artist}
+                {nameof(artist), artist},
+                {nameof(track), track}
             };
         }
     }

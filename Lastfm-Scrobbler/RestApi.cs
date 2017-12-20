@@ -1,13 +1,12 @@
-﻿using MediaBrowser.Model.Services;
+﻿using Lastfm.Api;
+using Lastfm.Resources;
+using MediaBrowser.Common.Net;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.Services;
 
-namespace LastfmScrobbler
+namespace Lastfm
 {
-    using Api;
-    using MediaBrowser.Common.Net;
-    using MediaBrowser.Controller.Net;
-    using MediaBrowser.Model.Serialization;
-   
-
     [Route("/Lastfm/Login", "POST")]
     public class Login
     {
@@ -17,16 +16,18 @@ namespace LastfmScrobbler
 
     public class RestApi : IService
     {
-        private readonly LastfmApiClient _apiClient;
+        private readonly LastfmApi _lastfmApi;
+        private readonly ILogger _logger;
 
-        public RestApi(IJsonSerializer jsonSerializer, IHttpClient httpClient)
+        public RestApi(IJsonSerializer jsonSerializer, IHttpClient httpClient, ILogManager logManager)
         {
-            _apiClient = new LastfmApiClient(httpClient, jsonSerializer);
+            _logger = logManager.GetLogger(PluginConst.ThisPlugin.Name);
+            _lastfmApi = new LastfmApi(httpClient, jsonSerializer, _logger);
         }
 
         public object Post(Login request)
         {
-            return _apiClient.RequestSession(request.Username, request.Password);
+            return _lastfmApi.RequestSession(request.Username, request.Password);
         }
     }
 }

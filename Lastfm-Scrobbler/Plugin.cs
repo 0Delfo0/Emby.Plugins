@@ -1,53 +1,65 @@
-﻿namespace LastfmScrobbler
-{
-    using Configuration;
-    using MediaBrowser.Common.Configuration;
-    using MediaBrowser.Common.Plugins;
-    using MediaBrowser.Model.Logging;
-    using MediaBrowser.Model.Plugins;
-    using MediaBrowser.Model.Serialization;
-    using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using Lastfm.Configuration;
+using Lastfm.Resources;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Serialization;
 
+namespace Lastfm
+{
     /// <summary>
     /// Class Plugin
     /// </summary>
     public class Plugin : BasePlugin<PluginConfiguration>
     {
-        /// <summary>
-        /// Flag set when an Import Syncing task is running
-        /// </summary>
-        public static bool Syncing { get; internal set; }
-
         internal static readonly SemaphoreSlim LastfmResourcePool = new SemaphoreSlim(4, 4);
-
-        //Global logging instance
-        public static ILogger Logger { get; set; }
 
         public PluginConfiguration PluginConfiguration => Configuration;
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
-            : base(applicationPaths, xmlSerializer)
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
         }
-
-        /// <summary>
-        /// Gets the name of the plugin
-        /// </summary>
-        /// <value>The name.</value>
-        public override string Name => "Last.fm Scrobbler";
-
-        /// <summary>
-        /// Gets the description.
-        /// </summary>
-        /// <value>The description.</value>
-        public override string Description => "Scrobble your music collection to Last.fm";
 
         /// <summary>
         /// Gets the instance.
         /// </summary>
         /// <value>The instance.</value>
         public static Plugin Instance { get; private set; }
+
+        /// <summary>
+        /// Flag set when an Import Syncing task is running
+        /// </summary>
+        public static bool Syncing { get; internal set; }
+
+        /// <summary>
+        /// Gets the name of the plugin
+        /// </summary>
+        /// <value>The name.</value>
+        public override string Name => PluginConst.ThisPlugin.Name;
+
+        /// <summary>
+        /// Gets the description.
+        /// </summary>
+        /// <value>The description.</value>
+        public override string Description => PluginConst.ThisPlugin.Description;
+
+        public override Guid Id => PluginConst.ThisPlugin.Id;
+        
+        public IEnumerable<PluginPageInfo> GetPages()
+        {
+            return new[]
+            {
+                new PluginPageInfo
+                {
+                    Name = Name,
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
+                }
+            };
+        }
 
         /// <summary>
         /// Updates the configuration.
@@ -59,7 +71,7 @@
 
             base.UpdateConfiguration(configuration);
 
-            ServerEntryPoint.Instance.OnConfigurationUpdated(oldConfig, (PluginConfiguration) configuration);
+            ServerEntryPoint.ServerEntryPoint.Instance.OnConfigurationUpdated(oldConfig, (PluginConfiguration) configuration);
         }
     }
 }

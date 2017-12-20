@@ -1,17 +1,20 @@
-﻿namespace LastfmScrobbler.Utils
-{
-    using MediaBrowser.Controller.Entities.Audio;
-    using Models;
-    using Resources;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Security.Cryptography;
-    using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using Lastfm.Api.Model.Objects.Track;
+using Lastfm.Api.Model.Requests;
+using Lastfm.Resources;
+using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Model.Logging;
 
+namespace Lastfm.Utils
+{
     public static class Helpers
     {
-        public static string CreateMd5Hash(string input)
+        private static string CreateMd5Hash(string input)
         {
             // Use input string to calculate MD5 hash
             var md5 = MD5.Create();
@@ -22,7 +25,7 @@
             // Convert the byte array to hexadecimal string
             var sb = new StringBuilder();
 
-            foreach (byte b in hashBytes)
+            foreach(byte b in hashBytes)
                 sb.Append(b.ToString("X2"));
 
             return sb.ToString();
@@ -30,10 +33,14 @@
 
         public static void AppendSignature(ref Dictionary<string, string> data)
         {
+            if(data.ContainsKey("api_sig"))
+            {
+                data.Remove("api_sig");
+            }
             data.Add("api_sig", CreateSignature(data));
         }
 
-        public static int ToTimestamp(DateTime date)
+        private static int ToTimestamp(DateTime date)
         {
             return Convert.ToInt32((date - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds);
         }
@@ -59,37 +66,54 @@
         {
             var s = new StringBuilder();
 
-            foreach (var item in data.OrderBy(x => x.Key))
+            foreach(var item in data.OrderBy(x => x.Key))
                 s.Append(string.Format("{0}{1}", item.Key, item.Value));
 
             //Append seceret
-            s.Append(Strings.Keys.LastfmApiSeceret);
+            s.Append(PluginConst.LasfmApi.LastfmApiSeceret);
 
             return CreateMd5Hash(s.ToString());
         }
 
         //The nuget doesn't seem to have GetProviderId for artists
-        public static string GetMusicBrainzArtistId(MusicArtist artist)
+        public static string GetMusicBrainzArtistId(MusicArtist artist, ILogger logger)
         {
-            string mbArtistId;
-
-            if (artist.ProviderIds == null)
+            if(artist.ProviderIds == null)
             {
-                Plugin.Logger.Debug("No provider id: {0}", artist.Name);
+                logger.Debug("No provider id: {0}", artist.Name);
                 return null;
             }
 
-            if (artist.ProviderIds.TryGetValue("MusicBrainzArtist", out mbArtistId))
+            if(artist.ProviderIds.TryGetValue("MusicBrainzArtist", out var mbArtistId))
+            {
                 return mbArtistId;
-
-            Plugin.Logger.Debug("No MBID: {0}", artist.Name);
+            }
+            logger.Debug("No MBID: {0}", artist.Name);
 
             return null;
         }
 
-        public static LastfmTrack FindMatchedLastfmSong(List<LastfmTrack> tracks, Audio song)
+        public static LfmTrack FindMatchedLastfmSong(IEnumerable<LfmTrack> tracks, Audio song)
         {
-            return tracks.FirstOrDefault(lastfmTrack => StringHelper.IsLike(song.Name, lastfmTrack.Name));
+            return tracks.FirstOrDefault(lastfmTrack => IsLike(song.Name, lastfmTrack.name));
+        }
+
+        private static bool IsLike(string s, string t)
+        {
+            //Placeholder until we have a better way
+            var source = SanitiseString(s);
+            var target = SanitiseString(t);
+
+            return source.Equals(target, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string SanitiseString(string s)
+        {
+            //This coiuld also be [a-z][0-9]
+            const string pattern = "[\\~#%&*{}/:<>?,-.()|\"-]";
+
+            //Remove invalid chars and then all spaces
+            return Regex.Replace(new Regex(pattern).Replace(s, string.Empty), @"\s+", string.Empty);
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿namespace LastfmScrobbler.Models
-{
-    using System;
+﻿using System;
 
-    public class LastfmUser
+namespace Lastfm.Configuration.Model
+{
+    public class LfmUser
     {
         public string Username { get; set; }
 

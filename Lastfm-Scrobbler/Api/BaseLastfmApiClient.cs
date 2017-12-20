@@ -1,68 +1,65 @@
-﻿namespace LastfmScrobbler.Api
-{
-    using MediaBrowser.Common.Net;
-    using MediaBrowser.Model.Serialization;
-    using Models.Requests;
-    using Models.Responses;
-    using Resources;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Lastfm.Api.Model.Requests;
+using Lastfm.Api.Model.Responses;
+using Lastfm.Resources;
+using Lastfm.Utils;
+using MediaBrowser.Common.Net;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
 
+namespace Lastfm.Api
+{
     public class BaseLastfmApiClient
     {
-        private const string ApiVersion = "2.0";
-
         private readonly IHttpClient _httpClient;
         private readonly IJsonSerializer _jsonSerializer;
+        protected readonly ILogger Logger;
 
-        protected BaseLastfmApiClient(IHttpClient httpClient, IJsonSerializer jsonSerializer)
+        protected BaseLastfmApiClient(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger)
         {
+            Logger = logger;
             _httpClient = httpClient;
             _jsonSerializer = jsonSerializer;
         }
 
-        /// <summary>
-        /// Send a POST request to the LastFM Api
-        /// </summary>
-        /// <typeparam name="TRequest">The type of the request</typeparam>
-        /// <typeparam name="TResponse">The type of the response</typeparam>
-        /// <param name="request">The request</param>
-        /// <returns>A response with type TResponse</returns>
-        protected async Task<TResponse> Post<TRequest, TResponse>(TRequest request) where TRequest : BaseRequest where TResponse : BaseResponse
+        protected async Task<TResponse> Post<TRequest, TResponse>(TRequest request) where TRequest : BaseAuthedRequest where TResponse : BaseResponse
         {
             var data = request.ToDictionary();
-
             //Append the signature
             Helpers.AppendSignature(ref data);
 
-            var httpRequestOptions = new HttpRequestOptions
+            using(var httpResponseInfo = await _httpClient.Post(new HttpRequestOptions
             {
                 Url = BuildPostUrl(request.Secure),
                 ResourcePool = Plugin.LastfmResourcePool,
+                RequestContentType = "application/json",
+                RequestContent = _jsonSerializer.SerializeToString(request),
                 CancellationToken = CancellationToken.None,
-                EnableHttpCompression = false
-            };
-            httpRequestOptions.SetPostData(EscapeDictionary(data));
-
-            var stream = await _httpClient.Post(httpRequestOptions);
+                TimeoutMs = 120000,
+                LogErrorResponseBody = false,
+                LogRequest = true,
+                BufferContent = false,
+                EnableHttpCompression = false,
+                EnableKeepAlive = false
+            }))
             {
                 try
                 {
-                    var result = _jsonSerializer.DeserializeFromStream<TResponse>(stream.Content);
+                    var result = _jsonSerializer.DeserializeFromStream<TResponse>(httpResponseInfo.Content);
 
                     //Lets Log the error here to ensure all errors are logged
-                    if (result.IsError())
-                        Plugin.Logger.Error(result.Message);
+                    if(result.IsError())
+                        Logger.Error(result.message);
 
                     return result;
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
-                    Plugin.Logger.Debug(e.Message);
+                    Logger.Debug(e.Message);
                 }
 
                 return null;
@@ -76,12 +73,12 @@
 
         protected async Task<TResponse> Get<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : BaseRequest where TResponse : BaseResponse
         {
-            using (var stream = await _httpClient.Get(new HttpRequestOptions
+            using(var stream = await _httpClient.Get(new HttpRequestOptions
             {
                 Url = BuildGetUrl(request.ToDictionary()),
                 ResourcePool = Plugin.LastfmResourcePool,
                 CancellationToken = cancellationToken,
-                EnableHttpCompression = false,
+                EnableHttpCompression = false
             }))
             {
                 try
@@ -89,27 +86,25 @@
                     var result = _jsonSerializer.DeserializeFromStream<TResponse>(stream);
 
                     //Lets Log the error here to ensure all errors are logged
-                    if (result.IsError())
-                        Plugin.Logger.Error(result.Message);
+                    if(result.IsError())
+                        Logger.Error(result.message);
 
                     return result;
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
-                    Plugin.Logger.Debug(e.Message);
+                    Logger.Debug(e.Message);
                 }
 
                 return null;
             }
         }
 
-        #region Private methods
-
         private static string BuildGetUrl(Dictionary<string, string> requestData)
         {
             return string.Format("http://{0}/{1}/?format=json&{2}",
-                Strings.Endpoints.LastfmApi,
-                ApiVersion,
+                PluginConst.LasfmApi.LastfmBaseUrl,
+                PluginConst.LasfmApi.ApiVersion,
                 Helpers.DictionaryToQueryString(requestData)
             );
         }
@@ -118,8 +113,8 @@
         {
             return string.Format("{0}://{1}/{2}/?format=json",
                 secure ? "https" : "http",
-                Strings.Endpoints.LastfmApi,
-                ApiVersion
+                PluginConst.LasfmApi.LastfmBaseUrl,
+                PluginConst.LasfmApi.ApiVersion
             );
         }
 
@@ -127,7 +122,5 @@
         {
             return dic.ToDictionary(item => item.Key, item => Uri.EscapeDataString(item.Value));
         }
-
-        #endregion
     }
 }
