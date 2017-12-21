@@ -26,7 +26,7 @@ namespace Lastfm.Api.Model.Responses
         public int perPage { get; set; }
         public int totalPages { get; set; }
         public int total { get; set; }
-        
+
         public bool IsLastPage()
         {
             return page.Equals(totalPages);

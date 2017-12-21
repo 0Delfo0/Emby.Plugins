@@ -177,10 +177,9 @@ namespace Lastfm.ScheduledTasks
 
         private async Task<List<LfmTrack>> GetUsersLibrary(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
-            
             //TODO
             // library.getArtists --> user.getArtistTracks --> track.getInfo
-            
+
             var tracks = new List<LfmTrack>();
             var page = 1;
             bool moreTracks;

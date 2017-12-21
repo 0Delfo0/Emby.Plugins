@@ -8,7 +8,7 @@ namespace Lastfm.Configuration
     /// </summary>
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public LfmUser[] LfmUsers { get; } 
+        public LfmUser[] LfmUsers { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PluginConfiguration" /> class.

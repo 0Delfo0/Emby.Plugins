@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Lastfm.Api.Model.Objects.Track;
-using Lastfm.Api.Model.Requests;
 using Lastfm.Resources;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Model.Entities;
@@ -26,7 +25,7 @@ namespace Lastfm.Utils
             // Convert the byte array to hexadecimal string
             var sb = new StringBuilder();
 
-            foreach (byte b in hashBytes)
+            foreach(byte b in hashBytes)
                 sb.Append(b.ToString("X2"));
 
             return sb.ToString();
@@ -34,7 +33,7 @@ namespace Lastfm.Utils
 
         public static void AppendSignature(ref Dictionary<string, string> data)
         {
-            if (data.ContainsKey("api_sig"))
+            if(data.ContainsKey("api_sig"))
             {
                 data.Remove("api_sig");
             }
@@ -60,14 +59,15 @@ namespace Lastfm.Utils
 
         public static string DictionaryToQueryString(Dictionary<string, string> data)
         {
-            return string.Join("&", data.Where(k => !string.IsNullOrWhiteSpace(k.Value)).Select(kvp => string.Format("{0}={1}", Uri.EscapeUriString(kvp.Key), Uri.EscapeUriString(kvp.Value))));
+            return string.Join("&", data.Where(
+                k => !string.IsNullOrWhiteSpace(k.Value)).Select(kvp => string.Format("{0}={1}", Uri.EscapeUriString(kvp.Key), Uri.EscapeUriString(kvp.Value))));
         }
 
         private static string CreateSignature(Dictionary<string, string> data)
         {
             var s = new StringBuilder();
 
-            foreach (var item in data.OrderBy(x => x.Key))
+            foreach(var item in data.OrderBy(x => x.Key))
                 s.Append(string.Format("{0}{1}", item.Key, item.Value));
 
             //Append seceret
@@ -79,13 +79,13 @@ namespace Lastfm.Utils
         //The nuget doesn't seem to have GetProviderId for artists
         public static string GetMusicBrainzArtistId(MusicArtist artist, ILogger logger)
         {
-            if (artist.ProviderIds == null)
+            if(artist.ProviderIds == null)
             {
                 logger.Debug("No provider id: {0}", artist.Name);
                 return null;
             }
 
-            if (artist.ProviderIds.TryGetValue(MetadataProviders.MusicBrainzArtist.ToString(), out var mbArtistId))
+            if(artist.ProviderIds.TryGetValue(MetadataProviders.MusicBrainzArtist.ToString(), out var mbArtistId))
             {
                 return mbArtistId;
             }
@@ -96,13 +96,13 @@ namespace Lastfm.Utils
 
         public static string GetMusicBrainzTrackId(Audio audio, ILogger logger)
         {
-            if (audio.ProviderIds == null)
+            if(audio.ProviderIds == null)
             {
                 logger.Debug("No provider id: {0}", audio.Name);
                 return null;
             }
 
-            if (audio.ProviderIds.TryGetValue(MetadataProviders.MusicBrainzTrack.ToString(), out var mbArtistId))
+            if(audio.ProviderIds.TryGetValue(MetadataProviders.MusicBrainzTrack.ToString(), out var mbArtistId))
             {
                 return mbArtistId;
             }

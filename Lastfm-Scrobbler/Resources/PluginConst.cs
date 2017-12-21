@@ -13,6 +13,7 @@ namespace Lastfm.Resources
 
             // Track
             internal const string TrackGetInfo = "track.getInfo";
+
             internal const string TrackLove = "track.love";
             internal const string TrackScrobble = "track.Scrobble";
             internal const string TrackUnlove = "track.unlove";
@@ -20,6 +21,7 @@ namespace Lastfm.Resources
 
             // User
             internal const string UserGetArtistTracks = "user.getArtistTracks";
+
             internal const string UserGetLovedTracks = "user.getLovedTracks";
 
             // Library
