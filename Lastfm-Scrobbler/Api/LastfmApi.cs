@@ -27,7 +27,7 @@ namespace Lastfm.Api
             {
                 username = username,
                 password = password,
-                method = PluginConst.Methods.AuthGetMobileSession,
+                method = PluginConst.Methods.Auth.GetMobileSession,
                 Secure = true
             };
 
@@ -51,7 +51,7 @@ namespace Lastfm.Api
                 mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
                 // TODO 
                 //trackNumber = item.get
-                method = PluginConst.Methods.TrackScrobble,
+                method = PluginConst.Methods.Track.Scrobble,
                 sk = user.SessionKey
             };
 
@@ -73,7 +73,7 @@ namespace Lastfm.Api
                 album = item.Album,
                 artist = item.Artists.First(),
                 mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
-                method = PluginConst.Methods.TrackUpdateNowPlaying,
+                method = PluginConst.Methods.Track.UpdateNowPlaying,
                 sk = user.SessionKey
             };
 
@@ -104,7 +104,7 @@ namespace Lastfm.Api
             {
                 artist = item.Artists.First(),
                 track = item.Name,
-                method = love ? PluginConst.Methods.TrackLove : PluginConst.Methods.TrackUnlove,
+                method = love ? PluginConst.Methods.Track.Love : PluginConst.Methods.Track.Unlove,
                 sk = user.SessionKey,
             };
 
@@ -139,7 +139,7 @@ namespace Lastfm.Api
                 user = user.Username,
                 page = page,
                 limit = limit,
-                method = PluginConst.Methods.UserGetLovedTracks
+                method = PluginConst.Methods.User.GetLovedTracks
             };
 
             return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
@@ -153,7 +153,7 @@ namespace Lastfm.Api
                 username = user.Username,
                 track = item.Artists.First(),
                 artist = item.Name,
-                method = PluginConst.Methods.TrackGetInfo
+                method = PluginConst.Methods.Track.GetInfo
             };
 
             return await Get<TrackGetInfoRequest, TrackGetInfoResponse>(request, cancellationToken);

@@ -8,24 +8,30 @@ namespace Lastfm.Resources
 
         internal static class Methods
         {
-            // Auth
-            internal const string AuthGetMobileSession = "auth.getMobileSession";
+            internal static class Auth
+            {
+                internal const string GetMobileSession = "auth.getMobileSession";
+            }
 
-            // Track
-            internal const string TrackGetInfo = "track.getInfo";
+            internal static class Track
+            {
+                internal const string GetInfo = "track.getInfo";
+                internal const string Love = "track.love";
+                internal const string Scrobble = "track.Scrobble";
+                internal const string Unlove = "track.unlove";
+                internal const string UpdateNowPlaying = "track.updateNowPlaying";
+            }
 
-            internal const string TrackLove = "track.love";
-            internal const string TrackScrobble = "track.Scrobble";
-            internal const string TrackUnlove = "track.unlove";
-            internal const string TrackUpdateNowPlaying = "track.updateNowPlaying";
+            internal static class User
+            {
+                internal const string GetArtistTracks = "user.getArtistTracks";
+                internal const string GetLovedTracks = "user.getLovedTracks";
+            }
 
-            // User
-            internal const string UserGetArtistTracks = "user.getArtistTracks";
-
-            internal const string UserGetLovedTracks = "user.getLovedTracks";
-
-            // Library
-            internal const string LibraryGgetArtists = "library.getArtists";
+            internal static class Library
+            {
+                internal const string GetArtists = "library.getArtists";
+            }
         }
 
         internal static class LasfmApi
