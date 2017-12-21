@@ -19,14 +19,14 @@ using MediaBrowser.Model.Tasks;
 
 namespace Lastfm.ScheduledTasks
 {
-    internal class ImportLastfmData : IScheduledTask
+    internal class LastfmSyncTask : IScheduledTask
     {
         private readonly IUserManager _userManager;
         private readonly LastfmApi _lastfmApi;
         private readonly IUserDataManager _userDataManager;
         private readonly ILogger _logger;
 
-        public ImportLastfmData(ILogManager loggerManager, IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
+        public LastfmSyncTask(ILogManager loggerManager, IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
         {
             _userManager = userManager;
             _userDataManager = userDataManager;
@@ -34,10 +34,10 @@ namespace Lastfm.ScheduledTasks
             _lastfmApi = new LastfmApi(httpClient, jsonSerializer, _logger);
         }
 
-        public string Key => PluginConst.ImportDataTask.Key;
-        public string Name => PluginConst.ImportDataTask.Name;
-        public string Category => PluginConst.ImportDataTask.Category;
-        public string Description => PluginConst.ImportDataTask.Description;
+        public string Key => PluginConst.LastfmSyncTask.Key;
+        public string Name => PluginConst.LastfmSyncTask.Name;
+        public string Category => PluginConst.LastfmSyncTask.Category;
+        public string Description => PluginConst.LastfmSyncTask.Description;
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
@@ -87,20 +87,21 @@ namespace Lastfm.ScheduledTasks
             var matchedSongs = 0;
 
             //Get loved tracks
-            var lovedTracksReponse = await _lastfmApi.GetLovedTracks(lastFmUser).ConfigureAwait(false);
-            var hasLovedTracks = lovedTracksReponse.HasLovedTracks();
+
+            var lfmLovedTracks = await UserGetLovedTracks(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
+            var hasLovedTracks = lfmLovedTracks.Any();
 
             //Get entire library
-            var usersTracks = await GetUsersLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
+            var lfmTracks = await GetUsersLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
 
-            if(usersTracks.Count == 0)
+            if(lfmTracks.Any())
             {
                 _logger.Info("User {0} has no tracks in last.fm", user.Name);
                 return;
             }
 
             //Group the library by artist
-            var userLibrary = usersTracks.GroupBy(t => t.artist.mbid).ToList();
+            var userLibrary = lfmTracks.GroupBy(t => t.artist.mbid).ToList();
 
             //Loop through each artist
             foreach(var artist in artists)
@@ -108,7 +109,7 @@ namespace Lastfm.ScheduledTasks
                 cancellationToken.ThrowIfCancellationRequested();
 
                 //Get all the tracks by the current artist
-                var artistMBid = Helpers.GetMusicBrainzArtistId(artist ,_logger);
+                var artistMBid = Helpers.GetMusicBrainzArtistId(artist, _logger);
 
                 if(artistMBid == null)
                     continue;
@@ -147,9 +148,9 @@ namespace Lastfm.ScheduledTasks
                     if(hasLovedTracks && lastFmUser.Options.SyncFavourites)
                     {
                         //Use MBID if set otherwise match on song name
-                        var favourited = lovedTracksReponse.lovedTracks.track.Any(
+                        var favourited = lfmLovedTracks.Any(
                             t => string.IsNullOrWhiteSpace(t.mbid)
-                                ? StringHelper.IsLike(t.name, matchedSong.name)
+                                ? Helpers.IsLike(t.name, matchedSong.name)
                                 : t.mbid.Equals(matchedSong.mbid)
                         );
 
@@ -164,12 +165,6 @@ namespace Lastfm.ScheduledTasks
                         userData.Played = true;
                         userData.PlayCount = Math.Max(userData.PlayCount, matchedSong.userplaycount);
                     }
-                    else
-                    {
-                        userData.Played = false;
-                        userData.PlayCount = 0;
-                        userData.LastPlayedDate = null;
-                    }
 
                     _userDataManager.SaveUserData(user.Id, song, userData, UserDataSaveReason.UpdateUserRating, cancellationToken);
                 }
@@ -177,13 +172,17 @@ namespace Lastfm.ScheduledTasks
 
             //The percentage might not actually be correct but I'm pretty tired and don't want to think about it
             _logger.Info("Finished import Last.fm library for {0}. Local Songs: {1} | Last.fm Songs: {2} | Matched Songs: {3} | {4}% match rate",
-                user.Name, totalSongs, usersTracks.Count, matchedSongs, Math.Round((double) matchedSongs / Math.Min(usersTracks.Count, totalSongs) * 100));
+                user.Name, totalSongs, lfmTracks.Count, matchedSongs, Math.Round((double) matchedSongs / Math.Min(lfmTracks.Count, totalSongs) * 100));
         }
 
         private async Task<List<LfmTrack>> GetUsersLibrary(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
+            
+            //TODO
+            // library.getArtists --> user.getArtistTracks --> track.getInfo
+            
             var tracks = new List<LfmTrack>();
-            var page = 1; //Page 0 = 1
+            var page = 1;
             bool moreTracks;
 
             do
@@ -206,6 +205,36 @@ namespace Lastfm.ScheduledTasks
 
                 progress.Report(currentProgress * 100);
             } while(moreTracks);
+
+            return tracks;
+        }
+
+        private async Task<List<LfmLovedTrack>> UserGetLovedTracks(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
+        {
+            var tracks = new List<LfmLovedTrack>();
+            var page = 1;
+            bool hasMorePage;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
+
+                if(!response.HasLovedTracks())
+                    break;
+
+                tracks.AddRange(response.lovedTracks.track);
+
+                hasMorePage = !response.lovedTracks.attr.IsLastPage();
+
+                //Only report progress in download because it will be 90% of the time taken
+                var currentProgress = (double) response.lovedTracks.attr.page / response.lovedTracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
+
+                _logger.Debug("Progress: " + currentProgress * 100);
+
+                progress.Report(currentProgress * 100);
+            } while(hasMorePage);
 
             return tracks;
         }

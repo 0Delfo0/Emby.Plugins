@@ -15,7 +15,7 @@ namespace Lastfm.Utils
             return Plugin.Instance.PluginConfiguration.LfmUsers == null ? null : GetUser(user.Id);
         }
 
-        private static LfmUser GetUser(Guid userId)
+        public static LfmUser GetUser(Guid userId)
         {
             return Plugin.Instance.PluginConfiguration.LfmUsers.FirstOrDefault(u => u.MediaBrowserUserId.Equals(userId));
         }

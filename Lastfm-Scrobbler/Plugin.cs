@@ -48,7 +48,7 @@ namespace Lastfm
         public override string Description => PluginConst.ThisPlugin.Description;
 
         public override Guid Id => PluginConst.ThisPlugin.Id;
-        
+
         public IEnumerable<PluginPageInfo> GetPages()
         {
             return new[]
@@ -59,19 +59,6 @@ namespace Lastfm
                     EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
                 }
             };
-        }
-
-        /// <summary>
-        /// Updates the configuration.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
-        public override void UpdateConfiguration(BasePluginConfiguration configuration)
-        {
-            var oldConfig = Configuration;
-
-            base.UpdateConfiguration(configuration);
-
-            ServerEntryPoint.ServerEntryPoint.Instance.OnConfigurationUpdated(oldConfig, (PluginConfiguration) configuration);
         }
     }
 }

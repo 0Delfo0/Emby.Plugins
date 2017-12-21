@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Lastfm.Api;
-using Lastfm.Configuration;
+using Lastfm.Utils;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
@@ -15,7 +15,7 @@ namespace Lastfm.ServerEntryPoint
     /// <summary>
     /// Class ServerEntryPoint
     /// </summary>
-    public class ServerEntryPoint : IServerEntryPoint
+    public class LastfmServerEntryPoint : IServerEntryPoint
     {
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
@@ -26,9 +26,10 @@ namespace Lastfm.ServerEntryPoint
         /// Gets the instance.
         /// </summary>
         /// <value>The instance.</value>
-        public static ServerEntryPoint Instance { get; private set; }
+        public static LastfmServerEntryPoint Instance { get; private set; }
 
-        public ServerEntryPoint(ISessionManager sessionManager, IJsonSerializer jsonSerializer, IHttpClient httpClient, ILogManager logManager, IUserDataManager userDataManager)
+        public LastfmServerEntryPoint(ISessionManager sessionManager, IJsonSerializer jsonSerializer,
+            IHttpClient httpClient, ILogManager logManager, IUserDataManager userDataManager)
         {
             _logger = logManager.GetLogger(Plugin.Instance.Name);
             _sessionManager = sessionManager;
@@ -51,7 +52,7 @@ namespace Lastfm.ServerEntryPoint
         /// <summary>
         /// Let last fm know when a user favourites or unfavourites a track
         /// </summary>
-        private void UserDataSaved(object sender, UserDataSaveEventArgs e)
+        private async void UserDataSaved(object sender, UserDataSaveEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
@@ -61,7 +62,7 @@ namespace Lastfm.ServerEntryPoint
             if(!e.SaveReason.Equals(UserDataSaveReason.UpdateUserRating))
                 return;
 
-            var lastfmUser = Utils.UserHelpers.GetUser(e.UserId);
+            var lastfmUser = UserHelpers.GetUser(e.UserId);
             if(lastfmUser == null)
             {
                 _logger.Debug("Could not find user");
@@ -80,14 +81,14 @@ namespace Lastfm.ServerEntryPoint
             if(Plugin.Syncing)
                 return;
 
-            _lastfmApi.LoveTrack(item, lastfmUser, e.UserData.IsFavorite);
+            await _lastfmApi.TrackLove(item, lastfmUser, e.UserData.IsFavorite);
         }
 
         /// <summary>
         /// Let last.fm know when a track has finished.
         /// Playback stopped is run when a track is finished.
         /// </summary>
-        private void PlaybackStopped(object sender, PlaybackStopEventArgs e)
+        private async void PlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
@@ -124,7 +125,7 @@ namespace Lastfm.ServerEntryPoint
                 return;
             }
 
-            var lastfmUser = Utils.UserHelpers.GetUser(user);
+            var lastfmUser = UserHelpers.GetUser(user);
             if(lastfmUser == null)
             {
                 _logger.Debug("Could not find last.fm user");
@@ -144,13 +145,13 @@ namespace Lastfm.ServerEntryPoint
                 return;
             }
 
-            _lastfmApi.Scrobble(item, lastfmUser);
+            await _lastfmApi.Scrobble(item, lastfmUser);
         }
 
         /// <summary>
         /// Let Last.fm know when a user has started listening to a track
         /// </summary>
-        private void PlaybackStart(object sender, PlaybackProgressEventArgs e)
+        private async void PlaybackStart(object sender, PlaybackProgressEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
@@ -163,7 +164,7 @@ namespace Lastfm.ServerEntryPoint
                 return;
             }
 
-            var lastfmUser = Utils.UserHelpers.GetUser(user);
+            var lastfmUser = UserHelpers.GetUser(user);
             if(lastfmUser == null)
             {
                 _logger.Debug("Could not find last.fm user");
@@ -184,18 +185,10 @@ namespace Lastfm.ServerEntryPoint
             }
 
             var item = (Audio) e.Item;
-            _lastfmApi.NowPlaying(item, lastfmUser);
+            await _lastfmApi.NowPlaying(item, lastfmUser);
         }
 
-        /// <summary>
-        /// Called when [configuration updated].
-        /// </summary>
-        /// <param name="oldConfig">The old config.</param>
-        /// <param name="newConfig">The new config.</param>
-        public void OnConfigurationUpdated(PluginConfiguration oldConfig, PluginConfiguration newConfig)
-        {
-        }
-
+        /// <inheritdoc />
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>

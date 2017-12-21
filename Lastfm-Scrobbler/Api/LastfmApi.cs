@@ -9,7 +9,6 @@ using Lastfm.Resources;
 using Lastfm.Utils;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Audio;
-using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 
@@ -35,7 +34,7 @@ namespace Lastfm.Api
             var response = await Post<AuthGetMobileSessionRequest, AuthGetMobileSessionResponse>(request);
 
             //Log the key for debugging
-            if (response != null)
+            if(response != null)
                 Logger.Info("{0} successfully logged into Last.fm", username);
 
             return response;
@@ -58,12 +57,12 @@ namespace Lastfm.Api
 
             var response = await Post<TrackScrobbleRequest, TrackScrobbleResponse>(request);
 
-            if (response != null && !response.IsError())
+            if(response != null && !response.IsError())
             {
                 Logger.Info("{0} played '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
-            Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response.message);
+            Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response?.message);
         }
 
         public async Task NowPlaying(Audio item, LfmUser user)
@@ -79,17 +78,17 @@ namespace Lastfm.Api
             };
 
             //Add duration
-            if (item.RunTimeTicks != null)
-                request.duration = Convert.ToInt32(TimeSpan.FromTicks((long)item.RunTimeTicks).TotalSeconds);
+            if(item.RunTimeTicks != null)
+                request.duration = Convert.ToInt32(TimeSpan.FromTicks((long) item.RunTimeTicks).TotalSeconds);
 
             var response = await Post<TrackUpdateNowPlayingRequest, TrackScrobbleResponse>(request);
 
-            if (response != null && !response.IsError())
+            if(response != null && !response.IsError())
             {
-                Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, , request.mbid);
+                Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
-            Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response.message);
+            Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response?.message);
         }
 
         /// <summary>
@@ -112,13 +111,13 @@ namespace Lastfm.Api
             //Send the request
             var response = await Post<TrackLoveRequest, BaseResponse>(request);
 
-            if (response != null && !response.IsError())
+            if(response != null && !response.IsError())
             {
                 Logger.Info("{0} {2}loved track '{1}'", user.Username, item.Name, love ? "" : "un");
                 return true;
             }
 
-            Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response.message, love);
+            Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response?.message, love);
             return false;
         }
 

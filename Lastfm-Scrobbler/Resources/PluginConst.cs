@@ -8,13 +8,22 @@ namespace Lastfm.Resources
 
         internal static class Methods
         {
-            internal const string TrackScrobble = "track.Scrobble";
-            internal const string TrackUpdateNowPlaying = "track.updateNowPlaying";
+            // Auth
             internal const string AuthGetMobileSession = "auth.getMobileSession";
-            internal const string TrackLove = "track.love";
-            internal const string TrackUnlove = "track.unlove";
-            internal const string UserGetLovedTracks = "user.getLovedTracks";
+
+            // Track
             internal const string TrackGetInfo = "track.getInfo";
+            internal const string TrackLove = "track.love";
+            internal const string TrackScrobble = "track.Scrobble";
+            internal const string TrackUnlove = "track.unlove";
+            internal const string TrackUpdateNowPlaying = "track.updateNowPlaying";
+
+            // User
+            internal const string UserGetArtistTracks = "user.getArtistTracks";
+            internal const string UserGetLovedTracks = "user.getLovedTracks";
+
+            // Library
+            internal const string LibraryGgetArtists = "library.getArtists";
         }
 
         internal static class LasfmApi
@@ -31,13 +40,13 @@ namespace Lastfm.Resources
             internal const string Description = "Lastfm";
             internal static Guid Id { get; } = Guid;
         }
-        
+
         internal static class Scrobbler
         {
             internal const string Name = "Last.fm Scrobbler";
         }
 
-        internal static class ImportDataTask
+        internal static class LastfmSyncTask
         {
             internal const string Name = "Import Last.fm Data";
             internal const string Key = "ImportDataTask_Key";

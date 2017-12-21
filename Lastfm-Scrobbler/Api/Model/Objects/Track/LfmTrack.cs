@@ -6,7 +6,5 @@ namespace Lastfm.Api.Model.Objects.Track
     {
         public int playcount { get; set; }
         public int userplaycount { get; set; }
-        
-        
     }
 }
