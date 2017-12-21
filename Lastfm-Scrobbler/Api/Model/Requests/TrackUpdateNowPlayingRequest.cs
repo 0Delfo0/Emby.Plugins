@@ -2,7 +2,7 @@
 
 namespace Lastfm.Api.Model.Requests
 {
-    public class NowPlayingRequest : BaseAuthedRequest
+    public class TrackUpdateNowPlayingRequest : BaseAuthedRequest
     {
         public string track { get; set; }
         public string album { get; set; }

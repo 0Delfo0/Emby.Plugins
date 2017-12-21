@@ -2,7 +2,7 @@
 
 namespace Lastfm.Api.Model.Responses
 {
-    public class ScrobbleResponse : BaseResponse
+    public class TrackScrobbleResponse : BaseResponse
     {
         public LfmScrobble LfmScrobble { get; set; }
     }

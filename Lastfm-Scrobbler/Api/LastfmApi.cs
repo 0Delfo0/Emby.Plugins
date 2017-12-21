@@ -4,10 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lastfm.Api.Model.Requests;
 using Lastfm.Api.Model.Responses;
+using Lastfm.Configuration.Model;
 using Lastfm.Resources;
 using Lastfm.Utils;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 
@@ -19,79 +21,75 @@ namespace Lastfm.Api
         {
         }
 
-        public async Task<MobileSessionResponse> RequestSession(string username, string password)
+        public async Task<AuthGetMobileSessionResponse> RequestSession(string username, string password)
         {
             //Build request object
-            var request = new MobileSessionRequest
+            var request = new AuthGetMobileSessionRequest
             {
-                Username = username,
-                Password = password,
-
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.AuthGetMobileSession,
+                username = username,
+                password = password,
+                method = PluginConst.Methods.AuthGetMobileSession,
                 Secure = true
             };
 
-            var response = await Post<MobileSessionRequest, MobileSessionResponse>(request);
+            var response = await Post<AuthGetMobileSessionRequest, AuthGetMobileSessionResponse>(request);
 
             //Log the key for debugging
-            if(response != null)
+            if (response != null)
                 Logger.Info("{0} successfully logged into Last.fm", username);
 
             return response;
         }
 
-        public async Task Scrobble(Audio item, LastfmUser user)
+        public async Task Scrobble(Audio item, LfmUser user)
         {
-            var request = new ScrobbleRequest
+            var request = new TrackScrobbleRequest
             {
-                Track = item.Name,
-                Album = item.Album,
-                Artist = item.Artists.First(),
-                Timestamp = Helpers.CurrentTimestamp(),
-
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.TrackScrobble,
-                SessionKey = user.SessionKey
+                track = item.Name,
+                album = item.Album,
+                artist = item.Artists.First(),
+                timestamp = Helpers.CurrentTimestamp(),
+                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                // TODO 
+                //trackNumber = item.get
+                method = PluginConst.Methods.TrackScrobble,
+                sk = user.SessionKey
             };
 
-            var response = await Post<ScrobbleRequest, ScrobbleResponse>(request);
+            var response = await Post<TrackScrobbleRequest, TrackScrobbleResponse>(request);
 
-            if(response != null && !response.IsError())
+            if (response != null && !response.IsError())
             {
-                Logger.Info("{0} played '{1}' - {2} - {3}", user.Username, request.Track, request.Album, request.Artist);
+                Logger.Info("{0} played '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
-
-            Logger.Error("Failed to TrackScrobble track: {0}", item.Name);
+            Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response.message);
         }
 
-        public async Task NowPlaying(Audio item, LastfmUser user)
+        public async Task NowPlaying(Audio item, LfmUser user)
         {
-            var request = new NowPlayingRequest
+            var request = new TrackUpdateNowPlayingRequest
             {
-                Track = item.Name,
-                Album = item.Album,
-                Artist = item.Artists.First(),
-
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.TrackUpdateNowPlaying,
-                SessionKey = user.SessionKey
+                track = item.Name,
+                album = item.Album,
+                artist = item.Artists.First(),
+                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                method = PluginConst.Methods.TrackUpdateNowPlaying,
+                sk = user.SessionKey
             };
 
             //Add duration
-            if(item.RunTimeTicks != null)
-                request.Duration = Convert.ToInt32(TimeSpan.FromTicks((long) item.RunTimeTicks).TotalSeconds);
+            if (item.RunTimeTicks != null)
+                request.duration = Convert.ToInt32(TimeSpan.FromTicks((long)item.RunTimeTicks).TotalSeconds);
 
-            var response = await Post<NowPlayingRequest, ScrobbleResponse>(request);
+            var response = await Post<TrackUpdateNowPlayingRequest, TrackScrobbleResponse>(request);
 
-            if(response != null && !response.IsError())
+            if (response != null && !response.IsError())
             {
-                Logger.Info("{0} is now playing '{1}' - {2} - {3}", user.Username, request.Track, request.Album, request.Artist);
+                Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, , request.mbid);
                 return;
             }
-
-            Logger.Error("Failed to send now playing for track: {0}", item.Name);
+            Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response.message);
         }
 
         /// <summary>
@@ -101,28 +99,26 @@ namespace Lastfm.Api
         /// <param name="user">The Lastfm User</param>
         /// <param name="love">If the track is loved or not</param>
         /// <returns></returns>
-        public async Task<bool> LoveTrack(Audio item, LastfmUser user, bool love = true)
+        public async Task<bool> TrackLove(Audio item, LfmUser user, bool love = true)
         {
             var request = new TrackLoveRequest
             {
-                Artist = item.Artists.First(),
-                Track = item.Name,
-
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = love ? PluginConst.Methods.TrackLove : PluginConst.Methods.TrackUnlove,
-                SessionKey = user.SessionKey,
+                artist = item.Artists.First(),
+                track = item.Name,
+                method = love ? PluginConst.Methods.TrackLove : PluginConst.Methods.TrackUnlove,
+                sk = user.SessionKey,
             };
 
             //Send the request
             var response = await Post<TrackLoveRequest, BaseResponse>(request);
 
-            if(response != null && !response.IsError())
+            if (response != null && !response.IsError())
             {
                 Logger.Info("{0} {2}loved track '{1}'", user.Username, item.Name, love ? "" : "un");
                 return true;
             }
 
-            Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response.Message, love);
+            Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response.message, love);
             return false;
         }
 
@@ -132,49 +128,36 @@ namespace Lastfm.Api
         /// <param name="item">The track</param>
         /// <param name="user">The Lastfm User</param>
         /// <returns></returns>
-        public async Task<bool> UnloveTrack(Audio item, LastfmUser user)
+        public async Task<bool> TrackUnlove(Audio item, LfmUser user)
         {
-            return await LoveTrack(item, user, false);
+            return await TrackLove(item, user, false);
         }
 
-        public async Task<LovedTracksResponse> GetLovedTracks(LastfmUser user)
+        public async Task<UserGetLovedTracksRespose> UserGetLovedTracks(LfmUser user, int page = 0, int limit = 200)
         {
-            var request = new GetLovedTracksRequest
+            var request = new UserGetLovedTracksRequest
             {
-                User = user.Username,
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.UserGetLovedTracks
+                user = user.Username,
+                page = page,
+                limit = limit,
+                method = PluginConst.Methods.UserGetLovedTracks
             };
 
-            return await Get<GetLovedTracksRequest, LovedTracksResponse>(request);
+            return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
         }
 
-        public async Task<GetTrackResponse> GetTracks(LastfmUser user, MusicArtist artist, CancellationToken cancellationToken)
+        public async Task<TrackGetInfoResponse> TrackGetInfo(LfmUser user, Audio item, CancellationToken cancellationToken)
         {
-            var request = new GetTrackRequest
+            var request = new TrackGetInfoRequest
             {
-                User = user.Username,
-                Artist = artist.Name,
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.GetTracks,
-                Limit = 1000
+                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                username = user.Username,
+                track = item.Artists.First(),
+                artist = item.Name,
+                method = PluginConst.Methods.TrackGetInfo
             };
 
-            return await Get<GetTrackRequest, GetTrackResponse>(request, cancellationToken);
-        }
-
-        public async Task<GetTrackResponse> GetTracks(LastfmUser user, CancellationToken cancellationToken, int page = 0, int limit = 200)
-        {
-            var request = new GetTrackRequest
-            {
-                User = user.Username,
-                ApiKey = PluginConst.LasfmApi.LastfmApiKey,
-                Method = PluginConst.Methods.GetTracks,
-                Limit = limit,
-                Page = page
-            };
-
-            return await Get<GetTrackRequest, GetTrackResponse>(request, cancellationToken);
+            return await Get<TrackGetInfoRequest, TrackGetInfoResponse>(request, cancellationToken);
         }
     }
 }

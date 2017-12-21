@@ -8,7 +8,7 @@ namespace Lastfm.Resources
 
         internal static class Methods
         {
-            internal const string TrackScrobble = "track.LfmScrobble";
+            internal const string TrackScrobble = "track.Scrobble";
             internal const string TrackUpdateNowPlaying = "track.updateNowPlaying";
             internal const string AuthGetMobileSession = "auth.getMobileSession";
             internal const string TrackLove = "track.love";

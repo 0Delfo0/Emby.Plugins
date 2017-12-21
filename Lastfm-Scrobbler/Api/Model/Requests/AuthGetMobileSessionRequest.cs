@@ -2,15 +2,17 @@
 
 namespace Lastfm.Api.Model.Requests
 {
-    public class GetLovedTracksRequest : BaseRequest
+    public class AuthGetMobileSessionRequest : BaseAuthedRequest
     {
-        public string user { get; set; }
+        public string password { get; set; }
+        public string username { get; set; }
 
         public override Dictionary<string, string> ToDictionary()
         {
             return new Dictionary<string, string>(base.ToDictionary())
             {
-                {nameof(user), user}
+                {nameof(password), password},
+                {nameof(username), username}
             };
         }
     }

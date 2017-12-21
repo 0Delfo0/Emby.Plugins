@@ -2,7 +2,7 @@
 
 namespace Lastfm.Api.Model.Requests
 {
-    public class ScrobbleRequest : BaseAuthedRequest
+    public class TrackScrobbleRequest : BaseAuthedRequest
     {
         public string artist { get; set; }
         public string track { get; set; }

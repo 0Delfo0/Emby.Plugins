@@ -2,7 +2,7 @@
 
 namespace Lastfm.Api.Model.Responses
 {
-    public class GetTrackResponse : BaseResponse
+    public class TrackGetInfoResponse : BaseResponse
     {
         public LfmTrack track { get; set; }
     }

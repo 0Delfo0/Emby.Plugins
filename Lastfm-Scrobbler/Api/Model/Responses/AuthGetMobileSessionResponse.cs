@@ -2,7 +2,7 @@
 
 namespace Lastfm.Api.Model.Responses
 {
-    public class MobileSessionResponse : BaseResponse
+    public class AuthGetMobileSessionResponse : BaseResponse
     {
         public LfmMobileSession session { get; set; }
     }
