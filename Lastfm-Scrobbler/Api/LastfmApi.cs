@@ -65,7 +65,7 @@ namespace Lastfm.Api
             Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response?.message);
         }
 
-        public async Task NowPlaying(Audio item, LfmUser user)
+        public async Task TrackNowPlaying(Audio item, LfmUser user)
         {
             var request = new TrackUpdateNowPlayingRequest
             {
@@ -105,7 +105,7 @@ namespace Lastfm.Api
                 artist = item.Artists.First(),
                 track = item.Name,
                 method = love ? PluginConst.Methods.Track.Love : PluginConst.Methods.Track.Unlove,
-                sk = user.SessionKey,
+                sk = user.SessionKey
             };
 
             //Send the request
@@ -144,6 +144,45 @@ namespace Lastfm.Api
 
             return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
         }
+        
+//        public async Task<UserGetLovedTracksRespose> LibraryGetArtistTracks(LfmUser user, int page = 0, int limit = 200)
+//        
+//        
+//        
+//        {
+//            do
+//            {
+//                cancellationToken.ThrowIfCancellationRequested();
+//
+//                var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
+//
+//                if(!response.HasLovedTracks())
+//                    break;
+//
+//                tracks.AddRange(response.lovedTracks.track);
+//
+//                hasMorePage = !response.lovedTracks.attr.IsLastPage();
+//
+//                //Only report progress in download because it will be 90% of the time taken
+//                var currentProgress = (double) response.lovedTracks.attr.page / response.lovedTracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
+//
+//                _logger.Debug("Progress: " + currentProgress * 100);
+//
+//                progress.Report(currentProgress * 100);
+//            } while(hasMorePage);
+//
+//            return tracks;
+//            
+//            var request = new UserGetLovedTracksRequest
+//            {
+//                user = user.Username,
+//                page = page,
+//                limit = limit,
+//                method = PluginConst.Methods.Library.GetArtists
+//            };
+//
+//            return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
+//        }
 
         public async Task<TrackGetInfoResponse> TrackGetInfo(LfmUser user, Audio item, CancellationToken cancellationToken)
         {

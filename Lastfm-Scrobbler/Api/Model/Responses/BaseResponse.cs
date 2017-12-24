@@ -1,4 +1,7 @@
-﻿namespace Lastfm.Api.Model.Responses
+﻿using System.Collections.Generic;
+using Lastfm.Api.Model.Objects;
+
+namespace Lastfm.Api.Model.Responses
 {
     public class BaseResponse
     {
@@ -9,5 +12,35 @@
         {
             return errorCode > 0;
         }
+    }
+
+    public class BaseResponsePagedResponse : BaseResponse, IPagedResponse
+    {
+        public string user { get; set; }
+        public int page { get; set; }
+        public int perPage { get; set; }
+        public int totalPages { get; set; }
+        public int total { get; set; }
+
+        public bool IsLastPage()
+        {
+            return page.Equals(totalPages);
+        }
+    }
+
+    public interface IPagedResponse
+    {
+        string user { get; set; }
+        int page { get; set; }
+        int perPage { get; set; }
+        int totalPages { get; set; }
+        int total { get; set; }
+        bool IsLastPage();
+    }
+
+    public interface IHasList<T> where T : LfmBaseObject
+    {
+        IEnumerable<T> GetElementsList(IEnumerable<T> list);
+        bool HasElement(IEnumerable<T> list);
     }
 }

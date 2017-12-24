@@ -92,7 +92,7 @@ namespace Lastfm.ScheduledTasks
             var hasLovedTracks = lfmLovedTracks.Any();
 
             //Get entire library
-            var lfmTracks = await GetUsersLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
+            var lfmTracks = await GetLastfmUsersLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
 
             if(lfmTracks.Any())
             {
@@ -175,7 +175,7 @@ namespace Lastfm.ScheduledTasks
                 user.Name, totalSongs, lfmTracks.Count, matchedSongs, Math.Round((double) matchedSongs / Math.Min(lfmTracks.Count, totalSongs) * 100));
         }
 
-        private async Task<List<LfmTrack>> GetUsersLibrary(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
+        private async Task<List<LfmTrack>> GetLastfmUsersLibrary(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
             //TODO
             // library.getArtists --> user.getArtistTracks --> track.getInfo
@@ -220,7 +220,7 @@ namespace Lastfm.ScheduledTasks
 
                 var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
 
-                if(!response.HasLovedTracks())
+                if(!response.lovedTracks.HasElement(response.lovedTracks.track))
                     break;
 
                 tracks.AddRange(response.lovedTracks.track);

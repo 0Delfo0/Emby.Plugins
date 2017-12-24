@@ -1,6 +1,6 @@
 ﻿namespace Lastfm.Api.Model.Objects.Album
 {
-    public class LfmAlbum
+    public class LfmAlbum : LfmBaseObject
     {
     }
 }

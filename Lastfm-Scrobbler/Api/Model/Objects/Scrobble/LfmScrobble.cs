@@ -1,6 +1,6 @@
 ﻿namespace Lastfm.Api.Model.Objects.Scrobble
 {
-    public class LfmScrobble
+    public class LfmScrobble : LfmBaseObject
     {
         public LfmScrobbleAttributes @attr { get; set; }
     }
