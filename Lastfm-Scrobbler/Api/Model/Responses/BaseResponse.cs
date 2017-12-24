@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Lastfm.Api.Model.Objects;
-
-namespace Lastfm.Api.Model.Responses
+﻿namespace Lastfm.Api.Model.Responses
 {
     public class BaseResponse
     {
@@ -36,11 +33,5 @@ namespace Lastfm.Api.Model.Responses
         int totalPages { get; set; }
         int total { get; set; }
         bool IsLastPage();
-    }
-
-    public interface IHasList<T> where T : LfmBaseObject
-    {
-        IEnumerable<T> GetElementsList(IEnumerable<T> list);
-        bool HasElement(IEnumerable<T> list);
     }
 }

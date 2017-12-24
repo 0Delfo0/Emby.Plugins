@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lastfm.Api.Model.Objects.Artist;
+using Lastfm.Api.Model.Objects.Track;
 using Lastfm.Api.Model.Requests;
 using Lastfm.Api.Model.Responses;
 using Lastfm.Configuration.Model;
@@ -132,6 +134,20 @@ namespace Lastfm.Api
             return await TrackLove(item, user, false);
         }
 
+        public async Task<UserGetArtistTracksRespose> UserGetArtistTracks(LfmUser user, LfmArtist artist, int page = 0)
+        {
+            var request = new UserGetArtistTracksRequest
+            {
+                user = user.Username,
+                artist = artist.name,
+                page = page,
+                limit = 0,
+                method = PluginConst.Methods.User.GetArtistTracks
+            };
+
+            return await Get<UserGetArtistTracksRequest, UserGetArtistTracksRespose>(request);
+        }
+
         public async Task<UserGetLovedTracksRespose> UserGetLovedTracks(LfmUser user, int page = 0, int limit = 200)
         {
             var request = new UserGetLovedTracksRequest
@@ -144,54 +160,28 @@ namespace Lastfm.Api
 
             return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
         }
-        
-//        public async Task<UserGetLovedTracksRespose> LibraryGetArtistTracks(LfmUser user, int page = 0, int limit = 200)
-//        
-//        
-//        
-//        {
-//            do
-//            {
-//                cancellationToken.ThrowIfCancellationRequested();
-//
-//                var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
-//
-//                if(!response.HasLovedTracks())
-//                    break;
-//
-//                tracks.AddRange(response.lovedTracks.track);
-//
-//                hasMorePage = !response.lovedTracks.attr.IsLastPage();
-//
-//                //Only report progress in download because it will be 90% of the time taken
-//                var currentProgress = (double) response.lovedTracks.attr.page / response.lovedTracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
-//
-//                _logger.Debug("Progress: " + currentProgress * 100);
-//
-//                progress.Report(currentProgress * 100);
-//            } while(hasMorePage);
-//
-//            return tracks;
-//            
-//            var request = new UserGetLovedTracksRequest
-//            {
-//                user = user.Username,
-//                page = page,
-//                limit = limit,
-//                method = PluginConst.Methods.Library.GetArtists
-//            };
-//
-//            return await Get<UserGetLovedTracksRequest, UserGetLovedTracksRespose>(request);
-//        }
 
-        public async Task<TrackGetInfoResponse> TrackGetInfo(LfmUser user, Audio item, CancellationToken cancellationToken)
+        public async Task<LibraryGetArtistTracksResponse> LibraryGetArtistTracks(LfmUser user, int page = 0, int limit = 200)
+        {
+            var request = new LibraryGetArtistTracksRequest
+            {
+                user = user.Username,
+                page = page,
+                limit = limit,
+                method = PluginConst.Methods.User.GetLovedTracks
+            };
+
+            return await Get<LibraryGetArtistTracksRequest, LibraryGetArtistTracksResponse>(request);
+        }
+
+        public async Task<TrackGetInfoResponse> TrackGetInfo(LfmUser user, LfmTrack track, CancellationToken cancellationToken)
         {
             var request = new TrackGetInfoRequest
             {
-                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                mbid = track.mbid,
                 username = user.Username,
-                track = item.Artists.First(),
-                artist = item.Name,
+                track = track.name,
+                artist = track.artist?.name,
                 method = PluginConst.Methods.Track.GetInfo
             };
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lastfm.Api;
+using Lastfm.Api.Model.Objects.Artist;
 using Lastfm.Api.Model.Objects.Track;
 using Lastfm.Configuration.Model;
 using Lastfm.Resources;
@@ -177,9 +178,61 @@ namespace Lastfm.ScheduledTasks
 
         private async Task<List<LfmTrack>> GetLastfmUsersLibrary(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
         {
-            //TODO
+            // To get all scrobbled tracks from a user
             // library.getArtists --> user.getArtistTracks --> track.getInfo
 
+            var allTracks = new List<LfmTrack>();
+            var artists = await GetLibraryGetArtistTracks(lfmUser, progress, cancellationToken, maxProgress, progressOffset);
+
+            foreach(var artist in artists)
+            {
+                var tracks = await GetUserGetArtistTracks(lfmUser, artist, progress, cancellationToken, maxProgress, progressOffset);
+                foreach(var track in tracks)
+                {
+                    var lfmTrack = await GetTrackGetInfo(lfmUser, track, cancellationToken);
+
+                    if(lfmTrack == null)
+                        break;
+
+                    allTracks.Add(lfmTrack);
+                }
+            }
+
+            return allTracks;
+        }
+
+        private async Task<List<LfmArtist>> GetLibraryGetArtistTracks(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
+        {
+            var artists = new List<LfmArtist>();
+            var page = 1;
+            bool moreTracks;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var response = await _lastfmApi.LibraryGetArtistTracks(lfmUser, page++).ConfigureAwait(false);
+
+                if(response?.artists?.artist == null || !response.artists.artist.Any())
+                    break;
+
+                artists.AddRange(response.artists.artist);
+
+                moreTracks = !response.artists.attr.IsLastPage();
+
+                //Only report progress in download because it will be 90% of the time taken
+                var currentProgress = (double) response.artists.attr.page / response.artists.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
+
+                _logger.Debug("Progress: " + currentProgress * 100);
+
+                progress.Report(currentProgress * 100);
+            } while(moreTracks);
+
+            return artists;
+        }
+
+        private async Task<List<LfmTrack>> GetUserGetArtistTracks(LfmUser lfmUser, LfmArtist lfmArtist, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
+        {
             var tracks = new List<LfmTrack>();
             var page = 1;
             bool moreTracks;
@@ -188,17 +241,17 @@ namespace Lastfm.ScheduledTasks
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var response = await _lastfmApi.GetTracks(lfmUser, cancellationToken, page++).ConfigureAwait(false);
+                var response = await _lastfmApi.UserGetArtistTracks(lfmUser, lfmArtist, page++).ConfigureAwait(false);
 
-                if(response == null || !response.HasTracks())
+                if(response?.artisttracks?.track == null || !response.artisttracks.track.Any())
                     break;
 
-                tracks.AddRange(response.Tracks.Tracks);
+                tracks.AddRange(response.artisttracks.track);
 
-                moreTracks = !response.Tracks.Metadata.IsLastPage();
+                moreTracks = !response.artisttracks.attr.IsLastPage();
 
                 //Only report progress in download because it will be 90% of the time taken
-                var currentProgress = (double) response.Tracks.Metadata.Page / response.Tracks.Metadata.TotalPages * (maxProgress - progressOffset) + progressOffset;
+                var currentProgress = (double) response.artisttracks.attr.page / response.artisttracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
 
                 _logger.Debug("Progress: " + currentProgress * 100);
 
@@ -206,6 +259,15 @@ namespace Lastfm.ScheduledTasks
             } while(moreTracks);
 
             return tracks;
+        }
+
+        private async Task<LfmTrack> GetTrackGetInfo(LfmUser lfmUser, LfmTrack lfmTrack, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var response = await _lastfmApi.TrackGetInfo(lfmUser, lfmTrack, cancellationToken).ConfigureAwait(false);
+
+            return response?.track;
         }
 
         private async Task<List<LfmLovedTrack>> UserGetLovedTracks(LfmUser lfmUser, IProgress<double> progress, CancellationToken cancellationToken, double maxProgress, double progressOffset)
@@ -220,7 +282,7 @@ namespace Lastfm.ScheduledTasks
 
                 var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
 
-                if(!response.lovedTracks.HasElement(response.lovedTracks.track))
+                if(response?.lovedTracks?.track == null || !response.lovedTracks.track.Any())
                     break;
 
                 tracks.AddRange(response.lovedTracks.track);
