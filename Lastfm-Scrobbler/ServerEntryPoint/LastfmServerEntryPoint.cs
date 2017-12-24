@@ -185,7 +185,7 @@ namespace Lastfm.ServerEntryPoint
             }
 
             var item = (Audio) e.Item;
-            await _lastfmApi.NowPlaying(item, lastfmUser);
+            await _lastfmApi.TrackNowPlaying(item, lastfmUser);
         }
 
         /// <inheritdoc />
