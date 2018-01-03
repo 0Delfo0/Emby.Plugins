@@ -45,8 +45,7 @@ namespace Lastfm.Api
 
             options.SetPostData(data);
 
-
-            using (var httpResponseInfo = await _httpClient.Post(options))
+            using(var httpResponseInfo = await _httpClient.Post(options))
             {
                 try
                 {
@@ -54,7 +53,9 @@ namespace Lastfm.Api
 
                     //Lets Log the error here to ensure all errors are logged
                     if(result.IsError())
+                    {
                         Plugin.Logger.Error(result.message);
+                    }
 
                     return result;
                 }
@@ -88,7 +89,9 @@ namespace Lastfm.Api
 
                     //Lets Log the error here to ensure all errors are logged
                     if(result.IsError())
+                    {
                         Plugin.Logger.Error(result.message);
+                    }
 
                     return result;
                 }

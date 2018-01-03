@@ -9,7 +9,7 @@ namespace Lastfm.Api.Model.Requests
         public string method { get; set; }
 
         /// <summary>
-        /// If the request is a secure request (Over HTTPS)
+        ///     If the request is a secure request (Over HTTPS)
         /// </summary>
         public bool Secure { get; set; }
 

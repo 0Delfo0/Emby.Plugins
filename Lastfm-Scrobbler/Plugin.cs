@@ -12,14 +12,12 @@ using MediaBrowser.Model.Serialization;
 namespace Lastfm
 {
     /// <summary>
-    /// Class Plugin
+    ///     Class Plugin
     /// </summary>
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public static ILogger Logger;
         internal static readonly SemaphoreSlim LastfmResourcePool = new SemaphoreSlim(4, 4);
-
-        public PluginConfiguration PluginConfiguration => Configuration;
 
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogManager logManager) : base(applicationPaths, xmlSerializer)
         {
@@ -27,25 +25,27 @@ namespace Lastfm
             Instance = this;
         }
 
+        public PluginConfiguration PluginConfiguration => Configuration;
+
         /// <summary>
-        /// Gets the instance.
+        ///     Gets the instance.
         /// </summary>
         /// <value>The instance.</value>
         public static Plugin Instance { get; private set; }
 
         /// <summary>
-        /// Flag set when an Import Syncing task is running
+        ///     Flag set when an Import Syncing task is running
         /// </summary>
         public static bool Syncing { get; internal set; }
 
         /// <summary>
-        /// Gets the name of the plugin
+        ///     Gets the name of the plugin
         /// </summary>
         /// <value>The name.</value>
         public override string Name => PluginConst.ThisPlugin.Name;
 
         /// <summary>
-        /// Gets the description.
+        ///     Gets the description.
         /// </summary>
         /// <value>The description.</value>
         public override string Description => PluginConst.ThisPlugin.Description;

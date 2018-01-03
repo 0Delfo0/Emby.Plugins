@@ -10,7 +10,9 @@ namespace Lastfm.Utils
         public static LfmUser GetUser(User user)
         {
             if(user == null)
+            {
                 return null;
+            }
 
             return Plugin.Instance.PluginConfiguration.LfmUsers == null ? null : GetUser(user.Id);
         }
@@ -22,7 +24,7 @@ namespace Lastfm.Utils
 
         public static LfmUser GetUser(string userGuid)
         {
-            return Guid.TryParse(userGuid, out Guid g) ? GetUser(g) : null;
+            return Guid.TryParse(userGuid, out var g) ? GetUser(g) : null;
         }
     }
 }

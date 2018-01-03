@@ -2,7 +2,7 @@
 {
     public class LfmScrobble : LfmBaseObject
     {
-        public LfmScrobbleAttributes @attr { get; set; }
+        public LfmScrobbleAttributes attr { get; set; }
     }
 
     public class LfmScrobbleAttributes

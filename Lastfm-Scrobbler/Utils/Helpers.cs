@@ -24,8 +24,10 @@ namespace Lastfm.Utils
             // Convert the byte array to hexadecimal string
             var sb = new StringBuilder();
 
-            foreach(byte b in hashBytes)
+            foreach(var b in hashBytes)
+            {
                 sb.Append(b.ToString("X2"));
+            }
 
             return sb.ToString();
         }
@@ -67,7 +69,9 @@ namespace Lastfm.Utils
             var s = new StringBuilder();
 
             foreach(var item in data.OrderBy(x => x.Key))
+            {
                 s.Append(string.Format("{0}{1}", item.Key, item.Value));
+            }
 
             //Append seceret
             s.Append(PluginConst.LasfmApi.LastfmApiSeceret);

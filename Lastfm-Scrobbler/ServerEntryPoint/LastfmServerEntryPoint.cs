@@ -7,25 +7,18 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 
 namespace Lastfm.ServerEntryPoint
 {
     /// <summary>
-    /// Class ServerEntryPoint
+    ///     Class ServerEntryPoint
     /// </summary>
     public class LastfmServerEntryPoint : IServerEntryPoint
     {
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
         private LastfmApi _lastfmApi;
-
-        /// <summary>
-        /// Gets the instance.
-        /// </summary>
-        /// <value>The instance.</value>
-        public static LastfmServerEntryPoint Instance { get; private set; }
 
         public LastfmServerEntryPoint(ISessionManager sessionManager, IJsonSerializer jsonSerializer,
             IHttpClient httpClient, IUserDataManager userDataManager)
@@ -37,7 +30,13 @@ namespace Lastfm.ServerEntryPoint
         }
 
         /// <summary>
-        /// Runs this instance.
+        ///     Gets the instance.
+        /// </summary>
+        /// <value>The instance.</value>
+        public static LastfmServerEntryPoint Instance { get; private set; }
+
+        /// <summary>
+        ///     Runs this instance.
         /// </summary>
         public void Run()
         {
@@ -47,18 +46,37 @@ namespace Lastfm.ServerEntryPoint
             _userDataManager.UserDataSaved += UserDataSaved;
         }
 
+        /// <inheritdoc />
         /// <summary>
-        /// Let last fm know when a user favourites or unfavourites a track
+        ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            //Unbind events
+            _sessionManager.PlaybackStart -= PlaybackStart;
+            _sessionManager.PlaybackStopped -= PlaybackStopped;
+            _userDataManager.UserDataSaved -= UserDataSaved;
+
+            //Clean up
+            _lastfmApi = null;
+        }
+
+        /// <summary>
+        ///     Let last fm know when a user favourites or unfavourites a track
         /// </summary>
         private async void UserDataSaved(object sender, UserDataSaveEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
+            {
                 return;
+            }
 
             //We also only care about User rating changes
             if(!e.SaveReason.Equals(UserDataSaveReason.UpdateUserRating))
+            {
                 return;
+            }
 
             var lastfmUser = UserHelpers.GetUser(e.UserId);
             if(lastfmUser == null)
@@ -77,20 +95,24 @@ namespace Lastfm.ServerEntryPoint
 
             //Dont do if syncing
             if(Plugin.Syncing)
+            {
                 return;
+            }
 
             await _lastfmApi.TrackLove(item, lastfmUser, e.UserData.IsFavorite);
         }
 
         /// <summary>
-        /// Let last.fm know when a track has finished.
-        /// Playback stopped is run when a track is finished.
+        ///     Let last.fm know when a track has finished.
+        ///     Playback stopped is run when a track is finished.
         /// </summary>
         private async void PlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
+            {
                 return;
+            }
 
             var item = (Audio) e.Item;
 
@@ -147,13 +169,15 @@ namespace Lastfm.ServerEntryPoint
         }
 
         /// <summary>
-        /// Let Last.fm know when a user has started listening to a track
+        ///     Let Last.fm know when a user has started listening to a track
         /// </summary>
         private async void PlaybackStart(object sender, PlaybackProgressEventArgs e)
         {
             //We only care about audio
             if(!(e.Item is Audio))
+            {
                 return;
+            }
 
             var user = e.Users.FirstOrDefault();
             if(user == null)
@@ -184,21 +208,6 @@ namespace Lastfm.ServerEntryPoint
 
             var item = (Audio) e.Item;
             await _lastfmApi.TrackNowPlaying(item, lastfmUser);
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            //Unbind events
-            _sessionManager.PlaybackStart -= PlaybackStart;
-            _sessionManager.PlaybackStopped -= PlaybackStopped;
-            _userDataManager.UserDataSaved -= UserDataSaved;
-
-            //Clean up
-            _lastfmApi = null;
         }
     }
 }

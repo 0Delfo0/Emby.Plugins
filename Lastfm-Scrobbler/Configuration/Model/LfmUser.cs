@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Lastfm.Configuration.Model
+﻿namespace Lastfm.Configuration.Model
 {
     public class LfmUser
     {
@@ -9,10 +7,9 @@ namespace Lastfm.Configuration.Model
         //We wont store the password, but instead store the session key since its a lifetime key
         public string SessionKey { get; set; }
 
-        public String MediaBrowserUserId { get; set; }
+        public string MediaBrowserUserId { get; set; }
 
         public bool Scrobble { get; set; }
         public bool SyncFavourites { get; set; }
-
     }
 }

@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 using Lastfm.Api;
 using Lastfm.Api.Model.Objects.Track;
 using Lastfm.Configuration.Model;
-using Lastfm.Resources;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
 
@@ -39,14 +37,12 @@ namespace Lastfm
                 Username = "Delfo78"
             };
 
-            var res =  _lastfmApi.TrackGetInfo(user, track, CancellationToken.None);
-
-           
+            var res = _lastfmApi.TrackGetInfo(user, track, CancellationToken.None);
 
             Task.WaitAll(res);
-            
+
             Plugin.Logger.Info("res {0}", res.Result.track.mbid);
-            
+
             return _lastfmApi.AuthGetMobileSession(request.Username, request.Password).ConfigureAwait(false);
         }
     }

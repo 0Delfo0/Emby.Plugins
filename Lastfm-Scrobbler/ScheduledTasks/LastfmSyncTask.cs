@@ -14,7 +14,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Tasks;
 
@@ -22,9 +21,9 @@ namespace Lastfm.ScheduledTasks
 {
     internal class LastfmSyncTask : IScheduledTask
     {
-        private readonly IUserManager _userManager;
         private readonly LastfmApi _lastfmApi;
         private readonly IUserDataManager _userDataManager;
+        private readonly IUserManager _userManager;
 
         public LastfmSyncTask(IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
         {
@@ -111,7 +110,9 @@ namespace Lastfm.ScheduledTasks
                 var artistMBid = Helpers.GetMusicBrainzArtistId(artist);
 
                 if(artistMBid == null)
+                {
                     continue;
+                }
 
                 //Get the tracks from lastfm for the current artist
                 var artistTracks = userLibrary.FirstOrDefault(t => t.Key.Equals(artistMBid));
@@ -134,7 +135,9 @@ namespace Lastfm.ScheduledTasks
                     var matchedSong = Helpers.FindMatchedLastfmSong(artistTracksList, song);
 
                     if(matchedSong == null)
+                    {
                         continue;
+                    }
 
                     //We have found a match
                     matchedSongs++;
@@ -190,7 +193,9 @@ namespace Lastfm.ScheduledTasks
                     var lfmTrack = await GetTrackGetInfo(lfmUser, track, cancellationToken);
 
                     if(lfmTrack == null)
+                    {
                         break;
+                    }
 
                     allTracks.Add(lfmTrack);
                 }
@@ -212,7 +217,9 @@ namespace Lastfm.ScheduledTasks
                 var response = await _lastfmApi.LibraryGetArtistTracks(lfmUser, page++).ConfigureAwait(false);
 
                 if(response?.artists?.artist == null || !response.artists.artist.Any())
+                {
                     break;
+                }
 
                 artists.AddRange(response.artists.artist);
 
@@ -242,7 +249,9 @@ namespace Lastfm.ScheduledTasks
                 var response = await _lastfmApi.UserGetArtistTracks(lfmUser, lfmArtist, page++).ConfigureAwait(false);
 
                 if(response?.artisttracks?.track == null || !response.artisttracks.track.Any())
+                {
                     break;
+                }
 
                 tracks.AddRange(response.artisttracks.track);
 
@@ -281,7 +290,9 @@ namespace Lastfm.ScheduledTasks
                 var response = await _lastfmApi.UserGetLovedTracks(lfmUser, page++).ConfigureAwait(false);
 
                 if(response?.lovedTracks?.track == null || !response.lovedTracks.track.Any())
+                {
                     break;
+                }
 
                 tracks.AddRange(response.lovedTracks.track);
 

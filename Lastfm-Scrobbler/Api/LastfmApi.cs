@@ -11,7 +11,6 @@ using Lastfm.Resources;
 using Lastfm.Utils;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.Audio;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 
 namespace Lastfm.Api
@@ -82,7 +81,9 @@ namespace Lastfm.Api
 
             //Add duration
             if(item.RunTimeTicks != null)
+            {
                 request.duration = Convert.ToInt32(TimeSpan.FromTicks((long) item.RunTimeTicks).TotalSeconds);
+            }
 
             var response = await Post<TrackUpdateNowPlayingRequest, TrackScrobbleResponse>(request);
 
@@ -95,7 +96,7 @@ namespace Lastfm.Api
         }
 
         /// <summary>
-        /// Loves or unloves a track
+        ///     Loves or unloves a track
         /// </summary>
         /// <param name="item">The track</param>
         /// <param name="user">The Lastfm User</param>
@@ -125,7 +126,7 @@ namespace Lastfm.Api
         }
 
         /// <summary>
-        /// Unlove a track. This is the same as LoveTrack with love as false
+        ///     Unlove a track. This is the same as LoveTrack with love as false
         /// </summary>
         /// <param name="item">The track</param>
         /// <param name="user">The Lastfm User</param>
