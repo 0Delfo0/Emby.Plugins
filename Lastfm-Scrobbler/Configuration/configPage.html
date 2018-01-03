@@ -1,296 +1,192 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html>
+
 <head>
     <title>Last.fm Scrobbler Configuration</title>
 </head>
+
 <body>
-<div id="lastfmConfigurationPage" data-role="page" class="page type-interior lastfmConfigurationPage pluginConfigurationPage ">
+    <div id="lastfmConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage lastfmConfigurationPage"
+        data-require="emby-input,emby-button,emby-select,emby-checkbox">
 
-    <div data-role="content">
-        <div class="content-primary">
-            <form id="LastfmScrobblerConfigurationForm">
-                <ul class="ulForm" data-role="listview">
-                    <li>
-                        <label for="user">Configure Last.fm for:</label>
-                        <select id="user" name="user"></select>
-                    </li>
-                    <li>
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required="required" placeholder="Your Last.fm Username"/>
-                    </li>
-                    <li>
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required="required" placeholder="Your Last.fm Password"/>
-                    </li>
-                    <li>
-                        <input type="checkbox" class="chkStandardFilter" name="optionScrobble" id="optionScrobble" data-mini="true"/>
-                        <label for="optionScrobble">Enable Scrobbling for this user?</label>
-                        <input type="checkbox" class="chkStandardFilter" name="optionFavourite" id="optionFavourite" data-mini="true"/>
-                        <label for="optionFavourite">Sync favourites for this user?</label>
-                    </li>
-                    <li>
-                        <button type="submit" data-theme="b">Save</button>
-                        <button id="removeUser">Delete users configuration</button>
-                        <button type="button" onclick="history.back();">Cancel</button>
-                    </li>
-                </ul>
-            </form>
+        <div data-role="content">
+            <div class="content-primary" style="max-width:700px;">
+
+                <h1>Last.fm</h1>
+
+                <form id="lastfmConfigurationForm">
+
+                    <div style="height:0; overflow: hidden;">
+                        <input type="text" name="fakeusernameremembered" tabindex="-1" />
+                        <input type="password" name="fakepasswordremembered" tabindex="-1" />
+                    </div>
+
+                    <div class="selectContainer">
+                        <select is="emby-select" id="user" name="user" label="Configure Last.fm for:" onchange="LastfmConfigurationPage.loadConfiguration(this.value);"></select>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="username" name="username" required="required" placeholder="Your Last.fm username"
+                            label="Username" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" id="password" name="password" required="required" placeholder="Your Last.fm password"
+                            label="Password" />
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="optionScrobble" name="optionScrobble" />
+                            <span>Enable Scrobbling for this user</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="optionFavourite" name="optionFavourite" />
+                            <span>Sync favourites for this user</span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>${ButtonSave}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <script type="text/javascript">
+        <script type="text/javascript">
 
-        var lastfmConfigurationPage = {
-            _pluginUniqueId: "82b5fb21-e174-40a1-a335-d1a19b03d175",
-            _users: [],
-            _config: [],
+            var LastfmConfigurationPage = {
+                pluginUniqueId: "82b5fb21-e174-40a1-a335-d1a19b03d175",
+                loadConfiguration: function (userId, page) {
+                    Dashboard.showLoadingMsg();
+                    var currentUserConfig;
+                    ApiClient.getPluginConfiguration(LastfmConfigurationPage.pluginUniqueId).then(function (config) {
+                        currentUserConfig = config.LfmUsers.filter(function (curr) {
+                            return curr.MediaBrowserUserId === userId;
+                        })[0];
+                        // User doesn't have a config, so create a default one.
+                        if (!currentUserConfig) {
+                            // You don't have to put every property in here, just the ones the UI is expecting (below)
+                            currentUserConfig = {
+                                Username: "",
+                                Scrobble: false,
+                                SyncFavourites: false
+                            };
+                        }
+                        // Default this to an empty array so the rendering code doesn't have to worry about it
+                        $('#username', page).val(currentUserConfig.Username);
+                        $('#optionScrobble', page).checked(currentUserConfig.Scrobble).checkboxradio("refresh");
+                        $('#optionFavourite', page).checked(currentUserConfig.SyncFavourites).checkboxradio("refresh");
 
-            _currentUserId: '',
-            _currentUserConfig: null,
-
-            configDefaults: {
-                Username: '',
-                SessionKey: '',
-                MediaBrowserUserId: '',
-                Options: {
-                    Scrobble: false,
-                    SyncFavourites: false
-                }
-            },
-
-            $el: null,
-
-            init: function ($ctx) {
-                Dashboard.showLoadingMsg();
-
-                this.$el = $ctx;
-
-                this.$el.find('#LastfmScrobblerConfigurationForm').on('submit', this, this.onSubmit);
-                this.$el.find('#user').on('change', this, $.proxy(this.onUserChange, this));
-                this.$el.find("#removeUser").on('click', $.proxy(this.removeUser, this));
-
-                var loadConfig = this.loadConfiguration();
-                var loadUsers = this.loadUsers().then($.proxy(this.buildUserList, this));
-
-                //When we load everything, set the current user
-                $.when(loadConfig, loadUsers).then($.proxy(function () {
-                    Dashboard.hideLoadingMsg();
-
-                    //Populate the inputs with the default selected user
-                    this.onUserChange();
-                }, this));
-            },
-
-            loadConfiguration: function () {
-                return ApiClient.getPluginConfiguration(this._pluginUniqueId).then($.proxy(function (config) {
-                    this._config = config;
-                }, this));
-            },
-
-            loadUsers: function () {
-                return ApiClient.getUsers().then($.proxy(function (users) {
-                    this._users = users;
-                }, this));
-            },
-
-            saveConfiguration: function () {
-                return ApiClient.updatePluginConfiguration(this._pluginUniqueId, this._config);
-            },
-
-            buildUserList: function () {
-                var $selectEl = this.$el.find('#user');
-                var html = '';
-
-                $.each(this._users, function (i, user) {
-                    html += "<option value='" + user.Id + "'>" + user.Name + "</option>";
-                });
-
-                $selectEl
-                    .html(html)
-                    .selectmenu("refresh");
-            },
-
-            populateInputs: function (userData) {
-                var data = $.extend({}, this.configDefaults, userData);
-
-                this.$el.find('#username').val(data.Username);
-                this.$el.find('#password').val(data.SessionKey);
-                this.$el.find('#optionScrobble').prop('checked', data.Options.Scrobble).checkboxradio('refresh');
-                this.$el.find('#optionFavourite').prop('checked', data.Options.SyncFavourites).checkboxradio('refresh');
-
-                //Dont forget to call checkboxradio('refresh') otherwise the UI wont update
-            },
-
-            save: function (username, password) {
-                var userConfig = this.getCurrentSelectedUser();
-
-                //If the conig for the user doesnt exist, create one
-                if (!userConfig) {
-                    userConfig = $.extend({}, this.configDefaults, {MediaBrowserUserId: this.getCurrentSelectedUserId()});
-
-                    this._config.LfmUsers.push(userConfig);
-                }
-
-                //Attach current option settings to 
-                userConfig.Options = this.getUIOptionsValues();
-
-
-                Dashboard.showLoadingMsg();
-
-
-                //Dont try and login again if the password field is still the SessionKey
-                if (userConfig.SessionKey == password) {
-                    this.doSave();
-
-                    return;
-                }
-
-                //Get session with user data
-                ApiClient.LastfmGetMobileSession(username, password).then($.proxy(function (data) {
-
-                    //Check if we have data
-                    if (data && data.session) {
-
-                        userConfig.Username = data.session.name;
-                        userConfig.SessionKey = data.session.key;
-
-                        //Save
-                        this.doSave();
-
-                        return;
+                        Dashboard.hideLoadingMsg();
+                    });
+                },
+                populateUsers: function (users) {
+                    var html = "";
+                    for (var i = 0, length = users.length; i < length; i++) {
+                        var user = users[i];
+                        html += '<option value="' + user.Id + '">' + user.Name + '</option>';
                     }
-
-                    //Show error
-                    Dashboard.showError(data.message || "Something went wrong");
-                }, this));
-            },
-
-            doSave: function () {
-                return this.saveConfiguration().then($.proxy(function (result) {
-                    Dashboard.processPluginConfigurationUpdateResult(result);
-
-                    this.onUserChange();
-                }, this));
-            },
-
-            getCurrentSelectedUserId: function () {
-                return this.$el.find('#user').val();
-            },
-
-            getCurrentSelectedUser: function () {
-                //Get the current user
-                var currentUserId = this.getCurrentSelectedUserId();
-
-                var currentUser = this._config.LfmUsers.filter(function (user) {
-                    return user.MediaBrowserUserId == currentUserId;
-                })[0];
-
-                return currentUser;
-            },
-
-            getSelectedMBUser: function () {
-                //Get the current user
-                var currentUserId = this.getCurrentSelectedUserId();
-
-                var currentUser = this._users.filter(function (user) {
-                    return user.Id == currentUserId;
-                })[0];
-
-                return currentUser;
-            },
-
-            //Will return an options object with the current UI settings
-            getUIOptionsValues: function () {
-                var options = $.extend({}, this.configDefaults.Options);
-
-                options.Scrobble = this.$el.find('#optionScrobble').checked();
-                options.SyncFavourites = this.$el.find('#optionFavourite').checked();
-
-                return options;
-            },
-
-            onUserChange: function () {
-                var currentUser = this.getCurrentSelectedUser();
-
-                this.populateInputs(currentUser);
-            },
-
-            onSubmit: function (e) {
-                e.preventDefault();
-
-                var self = e.data;
-
-                var username = $(this).find("#username").val();
-                var password = $(this).find("#password").val();
-
-                //Load the config again in case another user has updated their Lastfm info
-                self.loadConfiguration().then(function () {
-                    self.save(username, password);
-                });
-            },
-
-            removeUser: function (e) {
-                e.preventDefault();
-
-                var _this = this,
-                    currentUserId = this.getCurrentSelectedUserId(),
-                    selectedMBUser = this.getSelectedMBUser();
-
-                if (!currentUserId || !selectedMBUser) {
-                    Dashboard.showError("Please select a user");
-                    return;
+                    $('#user', $.mobile.activePage).html(html).selectmenu("refresh");
                 }
-
-                if (!confirm("Are you sure you want to remove the last.fm configuration for " + selectedMBUser.Name + "?")) return;
-
-                Dashboard.showLoadingMsg();
-
-                this.loadConfiguration().then($.proxy(function () {
-
-                    //Remove the config for the current user
-                    this._config.LfmUsers = $.grep(this._config.LfmUsers, function (user) {
-                        return user.MediaBrowserUserId != currentUserId;
-                    });
-
-                    //Save the result
-                    this.saveConfiguration().then(function () {
-                        Dashboard.processPluginConfigurationUpdateResult();
-
-                        _this.onUserChange();
-                    });
-                }, this));
-            }
-        };
-
-        $('#lastfmConfigurationPage').on('pageshow', function () {
-            lastfmConfigurationPage.init($(this));
-        });
-
-        //Add my own methods to the api client
-        ApiClient.LastfmGetMobileSession = function (username, password) {
-            if (!username) throw new Error("no username");
-
-            if (!password) throw new Error("no password");
-
-            var url = this.getUrl("Lastfm/Login");
-
-            var data = {
-                username: username,
-                password: password
             };
 
-            return this.ajax({
-                type: "POST",
-                url: url,
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: 'json',
-                error: function (xhr, ajaxOptions, thrownError) {
-                    throw new Error("Login Error", xhr.status, thrownError);
-                }
+            $('.lastfmConfigurationPage').on('pageinit', function () {
+                Dashboard.showLoadingMsg();
+                var page = this;
+                $('#lastfmConfigurationForm', page).on('submit', function () {
+                    Dashboard.showLoadingMsg();
+                    var currentUserId = $('#user', page).val();
+                    var currentUserConfig;
+                    ApiClient.getPluginConfiguration(LastfmConfigurationPage.pluginUniqueId).then(function (config) {
+                        currentUserConfig = config.LfmUsers.filter(function (curr) {
+                            return curr.MediaBrowserUserId == currentUserId;
+                        })[0];
+                        // User doesn't have a config, so create a default one.
+                        if (!currentUserConfig) {
+                            currentUserConfig = {};
+                            config.LfmUsers.push(currentUserConfig);
+                        }
+
+                        var username = $("#username", page).val();
+                        var password = $("#password", page).val();
+
+                        ApiClient.LastfmGetSession(username, password).then(function (data) {
+                            if (!data || !data.session) {
+                                Dashboard.alert("No SessionKey from Last.fm. Something went wrong");
+                                Dashboard.hideLoadingMsg();
+                                return;
+                            }
+
+                            currentUserConfig.Username = data.session.name;
+                            currentUserConfig.SessionKey = data.session.key;
+                            currentUserConfig.MediaBrowserUserId = currentUserId;
+                            currentUserConfig.Scrobble = $('#optionScrobble', page).checked();
+                            currentUserConfig.SyncFavourites = $('#optionFavourite', page).checked();
+
+                            if (currentUserConfig.UserName == '') {
+                                console.log('iiii');
+                                config.TraktUsers.splice(config.TraktUsers.indexOf(currentUserConfig), 1);
+                            }
+
+                            console.log('config', config);
+
+                            ApiClient.updatePluginConfiguration(LastfmConfigurationPage.pluginUniqueId, config).then(function (result) {
+                                console.log('result', result);
+                                Dashboard.processPluginConfigurationUpdateResult(result);
+                                ApiClient.getUsers().then(function (users) {
+                                    LastfmConfigurationPage.populateUsers(users);
+                                    Dashboard.alert('Settings saved.');
+                                });
+                            });
+                        });
+                    });
+                    Dashboard.hideLoadingMsg();
+                    return false;
+                });
             });
-        };
-    </script>
-</div>
+
+            $('.lastfmConfigurationPage').on('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                var page = this;
+                ApiClient.getUsers().then(function (users) {
+                    LastfmConfigurationPage.populateUsers(users);
+                    var currentUserId = $('#user', page).val();
+                    LastfmConfigurationPage.loadConfiguration(currentUserId, page);
+                });
+            });
+
+            //Add my own methods to the api client
+            ApiClient.LastfmGetSession = function (username, password) {
+                if (!username) throw new Error("no username");
+
+                if (!password) throw new Error("no password");
+
+                var url = this.getUrl("Lastfm/Login");
+
+                var data = {
+                    username: username,
+                    password: password
+                };
+
+                return this.ajax({
+                    type: "POST",
+                    url: url,
+                    data: JSON.stringify(data),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    timeout: 30000,
+                    async: false
+                });
+            };
+
+        </script>
+    </div>
 </body>
+
 </html>

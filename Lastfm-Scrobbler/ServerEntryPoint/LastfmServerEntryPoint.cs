@@ -131,7 +131,7 @@ namespace Lastfm.ServerEntryPoint
             }
 
             //User doesn't want to scrobble
-            if(!lastfmUser.Options.Scrobble)
+            if(!lastfmUser.Scrobble)
             {
                 Plugin.Logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
                 return;
@@ -170,7 +170,7 @@ namespace Lastfm.ServerEntryPoint
             }
 
             //User doesn't want to scrobble
-            if(!lastfmUser.Options.Scrobble)
+            if(!lastfmUser.Scrobble)
             {
                 Plugin.Logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
                 return;

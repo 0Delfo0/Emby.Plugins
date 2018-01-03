@@ -8,7 +8,6 @@ using Lastfm.Api.Model.Responses;
 using Lastfm.Resources;
 using Lastfm.Utils;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 
 namespace Lastfm.Api
@@ -26,34 +25,28 @@ namespace Lastfm.Api
 
         protected async Task<TResponse> Post<TRequest, TResponse>(TRequest request) where TRequest : BaseAuthedRequest where TResponse : BaseResponse
         {
-            Plugin.Logger.Info("request: {0}", request.ToString());
-
             var data = request.ToDictionary();
-
-            Plugin.Logger.Info("data: {0}", data);
             //Append the signature
             Helpers.AppendSignature(ref data);
-            Plugin.Logger.Info("data1: {0}", data);
 
-            Plugin.Logger.Info("JSON REQ: {0}", _jsonSerializer.SerializeToString(request));
-
-            Plugin.Logger.Info("JSON1 REQ: {0}", _jsonSerializer.SerializeToString(data));
-
-            using(var httpResponseInfo = await _httpClient.Post(new HttpRequestOptions
+            var options = new HttpRequestOptions
             {
                 Url = BuildPostUrl(request.Secure),
                 ResourcePool = Plugin.LastfmResourcePool,
                 RequestContentType = "application/json",
-                RequestContent = _jsonSerializer.SerializeToString(data),
                 CancellationToken = CancellationToken.None,
                 TimeoutMs = 120000,
                 LogErrorResponseBody = false,
                 LogRequest = true,
-                LogErrors = true,
                 BufferContent = false,
                 EnableHttpCompression = false,
                 EnableKeepAlive = false
-            }))
+            };
+
+            options.SetPostData(data);
+
+
+            using (var httpResponseInfo = await _httpClient.Post(options))
             {
                 try
                 {
