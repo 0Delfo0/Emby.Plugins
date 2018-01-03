@@ -146,7 +146,7 @@ namespace Lastfm.ScheduledTasks
                     var userData = _userDataManager.GetUserData(user.Id, song);
 
                     //Check if its a favourite track
-                    if(hasLovedTracks && lastFmUser.Options.SyncFavourites)
+                    if(hasLovedTracks && lastFmUser.SyncFavourites)
                     {
                         //Use MBID if set otherwise match on song name
                         var favourited = lfmLovedTracks.Any(

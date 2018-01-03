@@ -13,7 +13,7 @@ namespace Lastfm
     /// <summary>
     /// Class Plugin
     /// </summary>
-    public class Plugin : BasePlugin<PluginConfiguration>
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         internal static readonly SemaphoreSlim LastfmResourcePool = new SemaphoreSlim(4, 4);
 

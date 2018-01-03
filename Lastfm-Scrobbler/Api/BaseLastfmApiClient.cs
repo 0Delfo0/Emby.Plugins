@@ -32,12 +32,12 @@ namespace Lastfm.Api
             //Append the signature
             Helpers.AppendSignature(ref data);
 
-            using(var httpResponseInfo = await _httpClient.Post(new HttpRequestOptions
+            var options = new HttpRequestOptions
             {
                 Url = BuildPostUrl(request.Secure),
                 ResourcePool = Plugin.LastfmResourcePool,
                 RequestContentType = "application/json",
-                RequestContent = _jsonSerializer.SerializeToString(request),
+                //RequestContent = _jsonSerializer.SerializeToString(request),
                 CancellationToken = CancellationToken.None,
                 TimeoutMs = 120000,
                 LogErrorResponseBody = false,
@@ -45,19 +45,29 @@ namespace Lastfm.Api
                 BufferContent = false,
                 EnableHttpCompression = false,
                 EnableKeepAlive = false
-            }))
+            };
+
+            options.SetPostData(data);
+
+            foreach (KeyValuePair<string, string> KV in data)
+            {
+                Logger.Info("data|{0}|{1}|", KV.Key, KV.Value);
+            }
+
+
+            using (var httpResponseInfo = await _httpClient.Post(options))
             {
                 try
                 {
                     var result = _jsonSerializer.DeserializeFromStream<TResponse>(httpResponseInfo.Content);
 
                     //Lets Log the error here to ensure all errors are logged
-                    if(result.IsError())
+                    if (result.IsError())
                         Logger.Error(result.message);
 
                     return result;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Logger.Debug(e.Message);
                 }
@@ -73,7 +83,7 @@ namespace Lastfm.Api
 
         protected async Task<TResponse> Get<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken) where TRequest : BaseRequest where TResponse : BaseResponse
         {
-            using(var stream = await _httpClient.Get(new HttpRequestOptions
+            using (var stream = await _httpClient.Get(new HttpRequestOptions
             {
                 Url = BuildGetUrl(request.ToDictionary()),
                 ResourcePool = Plugin.LastfmResourcePool,
@@ -86,12 +96,12 @@ namespace Lastfm.Api
                     var result = _jsonSerializer.DeserializeFromStream<TResponse>(stream);
 
                     //Lets Log the error here to ensure all errors are logged
-                    if(result.IsError())
+                    if (result.IsError())
                         Logger.Error(result.message);
 
                     return result;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Logger.Debug(e.Message);
                 }
