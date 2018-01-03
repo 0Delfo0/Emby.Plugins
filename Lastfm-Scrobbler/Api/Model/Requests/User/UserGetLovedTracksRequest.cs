@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lastfm.Api.Model.Requests
+namespace Lastfm.Api.Model.Requests.User
 {
     public class UserGetLovedTracksRequest : BaseRequest, IPagedRequest
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lastfm.Api.Model.Requests
+namespace Lastfm.Api.Model.Requests.Track
 {
     public class TrackUpdateNowPlayingRequest : BaseAuthedRequest
     {

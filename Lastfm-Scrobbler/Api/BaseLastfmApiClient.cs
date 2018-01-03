@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lastfm.Api.Model.Requests;
@@ -120,11 +119,6 @@ namespace Lastfm.Api
                 PluginConst.LasfmApi.LastfmBaseUrl,
                 PluginConst.LasfmApi.ApiVersion
             );
-        }
-
-        private static Dictionary<string, string> EscapeDictionary(Dictionary<string, string> dic)
-        {
-            return dic.ToDictionary(item => item.Key, item => Uri.EscapeDataString(item.Value));
         }
     }
 }

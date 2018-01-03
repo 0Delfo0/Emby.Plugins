@@ -26,13 +26,11 @@
                 </div>
 
                 <div class="inputContainer">
-                    <input is="emby-input" type="text" id="username" name="username" required="required" placeholder="Your Last.fm username"
-                           label="Username"/>
+                    <input is="emby-input" type="text" id="username" name="username" required="required" placeholder="Your Last.fm username" label="Username"/>
                 </div>
 
                 <div class="inputContainer">
-                    <input is="emby-input" type="password" id="password" name="password" required="required" placeholder="Your Last.fm password"
-                           label="Password"/>
+                    <input is="emby-input" type="password" id="password" name="password" required="required" placeholder="Your Last.fm password" label="Password"/>
                 </div>
 
                 <div class="checkboxContainer">
@@ -129,9 +127,9 @@
                         currentUserConfig.Scrobble = $('#optionScrobble', page).checked();
                         currentUserConfig.SyncFavourites = $('#optionFavourite', page).checked();
 
-                        if (currentUserConfig.UserName == '') {
+                        if (currentUserConfig.UserName === '') {
                             console.log('iiii');
-                            config.TraktUsers.splice(config.TraktUsers.indexOf(currentUserConfig), 1);
+                            config.LfmUsers.splice(config.LfmUsers.indexOf(currentUserConfig), 1);
                         }
 
                         console.log('config', config);

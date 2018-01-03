@@ -42,7 +42,7 @@ namespace Lastfm
         ///     Gets the name of the plugin
         /// </summary>
         /// <value>The name.</value>
-        public override string Name => PluginConst.ThisPlugin.Name;
+        public sealed override string Name => PluginConst.ThisPlugin.Name;
 
         /// <summary>
         ///     Gets the description.

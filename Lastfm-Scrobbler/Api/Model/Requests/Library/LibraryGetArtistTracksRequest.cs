@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lastfm.Api.Model.Requests
+namespace Lastfm.Api.Model.Requests.Library
 {
     public class LibraryGetArtistTracksRequest : BaseRequest, IPagedRequest
     {

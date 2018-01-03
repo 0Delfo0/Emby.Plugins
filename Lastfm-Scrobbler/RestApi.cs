@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Lastfm.Api;
-using Lastfm.Api.Model.Objects.Track;
-using Lastfm.Configuration.Model;
+﻿using Lastfm.Api;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
@@ -27,23 +23,7 @@ namespace Lastfm
 
         public object Post(Login request)
         {
-            var track = new LfmTrack
-            {
-                name = "Orion"
-            };
-
-            var user = new LfmUser
-            {
-                Username = "Delfo78"
-            };
-
-            var res = _lastfmApi.TrackGetInfo(user, track, CancellationToken.None);
-
-            Task.WaitAll(res);
-
-            Plugin.Logger.Info("res {0}", res.Result.track.mbid);
-
-            return _lastfmApi.AuthGetMobileSession(request.Username, request.Password).ConfigureAwait(false);
+            return _lastfmApi.AuthGetMobileSession(request.Username, request.Password);
         }
     }
 }

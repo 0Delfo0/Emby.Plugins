@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Lastfm.Api.Model.Objects.Artist;
 
-namespace Lastfm.Api.Model.Responses
+namespace Lastfm.Api.Model.Responses.Library
 {
     public class LibraryGetArtistTracksResponse : BaseResponsePagedResponse
     {
