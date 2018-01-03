@@ -18,11 +18,11 @@ namespace Lastfm.Api
 {
     public class LastfmApi : BaseLastfmApiClient
     {
-        public LastfmApi(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger) : base(httpClient, jsonSerializer, logger)
+        public LastfmApi(IHttpClient httpClient, IJsonSerializer jsonSerializer) : base(httpClient, jsonSerializer)
         {
         }
 
-        public async Task<AuthGetMobileSessionResponse> RequestSession(string username, string password)
+        public async Task<AuthGetMobileSessionResponse> AuthGetMobileSession(string username, string password)
         {
             //Build request object
             var request = new AuthGetMobileSessionRequest
@@ -37,8 +37,9 @@ namespace Lastfm.Api
 
             //Log the key for debugging
             if(response != null)
-                Logger.Info("{0} successfully logged into Last.fm", username);
-
+            {
+                Plugin.Logger.Info("{0} successfully logged into Last.fm", username);
+            }
             return response;
         }
 
@@ -50,7 +51,7 @@ namespace Lastfm.Api
                 album = item.Album,
                 artist = item.Artists.First(),
                 timestamp = Helpers.CurrentTimestamp(),
-                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                mbid = Helpers.GetMusicBrainzTrackId(item),
                 // TODO 
                 //trackNumber = item.get
                 method = PluginConst.Methods.Track.Scrobble,
@@ -61,10 +62,10 @@ namespace Lastfm.Api
 
             if(response != null && !response.IsError())
             {
-                Logger.Info("{0} played '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
+                Plugin.Logger.Info("{0} played '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
-            Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response?.message);
+            Plugin.Logger.Error("Failed to Scrobble track: {0} - messagge {1}", item.Name, response?.message);
         }
 
         public async Task TrackNowPlaying(Audio item, LfmUser user)
@@ -74,7 +75,7 @@ namespace Lastfm.Api
                 track = item.Name,
                 album = item.Album,
                 artist = item.Artists.First(),
-                mbid = Helpers.GetMusicBrainzTrackId(item, Logger),
+                mbid = Helpers.GetMusicBrainzTrackId(item),
                 method = PluginConst.Methods.Track.UpdateNowPlaying,
                 sk = user.SessionKey
             };
@@ -87,10 +88,10 @@ namespace Lastfm.Api
 
             if(response != null && !response.IsError())
             {
-                Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
+                Plugin.Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
-            Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response?.message);
+            Plugin.Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response?.message);
         }
 
         /// <summary>
@@ -115,11 +116,11 @@ namespace Lastfm.Api
 
             if(response != null && !response.IsError())
             {
-                Logger.Info("{0} {2}loved track '{1}'", user.Username, item.Name, love ? "" : "un");
+                Plugin.Logger.Info("{0} {2}loved track '{1}'", user.Username, item.Name, love ? "" : "un");
                 return true;
             }
 
-            Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response?.message, love);
+            Plugin.Logger.Error("{0} Failed to love = {3} track '{1}' - {2}", user.Username, item.Name, response?.message, love);
             return false;
         }
 

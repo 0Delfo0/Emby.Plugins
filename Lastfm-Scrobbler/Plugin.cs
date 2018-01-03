@@ -5,6 +5,7 @@ using Lastfm.Configuration;
 using Lastfm.Resources;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
@@ -13,14 +14,16 @@ namespace Lastfm
     /// <summary>
     /// Class Plugin
     /// </summary>
-    public class Plugin : BasePlugin<PluginConfiguration>
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
+        public static ILogger Logger;
         internal static readonly SemaphoreSlim LastfmResourcePool = new SemaphoreSlim(4, 4);
 
         public PluginConfiguration PluginConfiguration => Configuration;
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogManager logManager) : base(applicationPaths, xmlSerializer)
         {
+            Logger = logManager.GetLogger(Name);
             Instance = this;
         }
 

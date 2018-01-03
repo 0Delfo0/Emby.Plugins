@@ -25,14 +25,12 @@ namespace Lastfm.ScheduledTasks
         private readonly IUserManager _userManager;
         private readonly LastfmApi _lastfmApi;
         private readonly IUserDataManager _userDataManager;
-        private readonly ILogger _logger;
 
-        public LastfmSyncTask(ILogManager loggerManager, IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
+        public LastfmSyncTask(IHttpClient httpClient, IJsonSerializer jsonSerializer, IUserManager userManager, IUserDataManager userDataManager)
         {
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _logger = loggerManager.GetLogger(PluginConst.ThisPlugin.Name);
-            _lastfmApi = new LastfmApi(httpClient, jsonSerializer, _logger);
+            _lastfmApi = new LastfmApi(httpClient, jsonSerializer);
         }
 
         public string Key => PluginConst.LastfmSyncTask.Key;
@@ -57,7 +55,7 @@ namespace Lastfm.ScheduledTasks
 
             if(users.Count == 0)
             {
-                _logger.Info("No users found");
+                Plugin.Logger.Info("No users found");
                 return;
             }
 
@@ -97,7 +95,7 @@ namespace Lastfm.ScheduledTasks
 
             if(lfmTracks.Any())
             {
-                _logger.Info("User {0} has no tracks in last.fm", user.Name);
+                Plugin.Logger.Info("User {0} has no tracks in last.fm", user.Name);
                 return;
             }
 
@@ -110,7 +108,7 @@ namespace Lastfm.ScheduledTasks
                 cancellationToken.ThrowIfCancellationRequested();
 
                 //Get all the tracks by the current artist
-                var artistMBid = Helpers.GetMusicBrainzArtistId(artist, _logger);
+                var artistMBid = Helpers.GetMusicBrainzArtistId(artist);
 
                 if(artistMBid == null)
                     continue;
@@ -120,13 +118,13 @@ namespace Lastfm.ScheduledTasks
 
                 if(artistTracks == null || !artistTracks.Any())
                 {
-                    _logger.Info("{0} has no tracks in last.fm library for {1}", user.Name, artist.Name);
+                    Plugin.Logger.Info("{0} has no tracks in last.fm library for {1}", user.Name, artist.Name);
                     continue;
                 }
 
                 var artistTracksList = artistTracks.ToList();
 
-                _logger.Info("Found {0} tracks in last.fm library for {1}", artistTracksList.Count, artist.Name);
+                Plugin.Logger.Info("Found {0} tracks in last.fm library for {1}", artistTracksList.Count, artist.Name);
 
                 //Loop through each song
                 foreach(var song in artist.GetRecursiveChildren().OfType<Audio>())
@@ -141,7 +139,7 @@ namespace Lastfm.ScheduledTasks
                     //We have found a match
                     matchedSongs++;
 
-                    _logger.Debug("Found match for {0} = {1}", song.Name, matchedSong.name);
+                    Plugin.Logger.Debug("Found match for {0} = {1}", song.Name, matchedSong.name);
 
                     var userData = _userDataManager.GetUserData(user.Id, song);
 
@@ -157,7 +155,7 @@ namespace Lastfm.ScheduledTasks
 
                         userData.IsFavorite = favourited;
 
-                        _logger.Debug("{0} Favourite: {1}", song.Name, favourited);
+                        Plugin.Logger.Debug("{0} Favourite: {1}", song.Name, favourited);
                     }
 
                     //Update the play count
@@ -172,7 +170,7 @@ namespace Lastfm.ScheduledTasks
             }
 
             //The percentage might not actually be correct but I'm pretty tired and don't want to think about it
-            _logger.Info("Finished import Last.fm library for {0}. Local Songs: {1} | Last.fm Songs: {2} | Matched Songs: {3} | {4}% match rate",
+            Plugin.Logger.Info("Finished import Last.fm library for {0}. Local Songs: {1} | Last.fm Songs: {2} | Matched Songs: {3} | {4}% match rate",
                 user.Name, totalSongs, lfmTracks.Count, matchedSongs, Math.Round((double) matchedSongs / Math.Min(lfmTracks.Count, totalSongs) * 100));
         }
 
@@ -223,7 +221,7 @@ namespace Lastfm.ScheduledTasks
                 //Only report progress in download because it will be 90% of the time taken
                 var currentProgress = (double) response.artists.attr.page / response.artists.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
 
-                _logger.Debug("Progress: " + currentProgress * 100);
+                Plugin.Logger.Debug("Progress: " + currentProgress * 100);
 
                 progress.Report(currentProgress * 100);
             } while(moreTracks);
@@ -253,7 +251,7 @@ namespace Lastfm.ScheduledTasks
                 //Only report progress in download because it will be 90% of the time taken
                 var currentProgress = (double) response.artisttracks.attr.page / response.artisttracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
 
-                _logger.Debug("Progress: " + currentProgress * 100);
+                Plugin.Logger.Debug("Progress: " + currentProgress * 100);
 
                 progress.Report(currentProgress * 100);
             } while(moreTracks);
@@ -292,7 +290,7 @@ namespace Lastfm.ScheduledTasks
                 //Only report progress in download because it will be 90% of the time taken
                 var currentProgress = (double) response.lovedTracks.attr.page / response.lovedTracks.attr.totalPages * (maxProgress - progressOffset) + progressOffset;
 
-                _logger.Debug("Progress: " + currentProgress * 100);
+                Plugin.Logger.Debug("Progress: " + currentProgress * 100);
 
                 progress.Report(currentProgress * 100);
             } while(hasMorePage);

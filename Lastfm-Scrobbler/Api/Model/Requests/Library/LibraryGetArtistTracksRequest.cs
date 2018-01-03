@@ -4,7 +4,6 @@ namespace Lastfm.Api.Model.Requests
 {
     public class LibraryGetArtistTracksRequest : BaseRequest, IPagedRequest
     {
-
         public string user { get; set; }
         public int page { get; set; }
         public int limit { get; set; }
@@ -18,6 +17,5 @@ namespace Lastfm.Api.Model.Requests
                 {nameof(limit), limit.ToString()}
             };
         }
-            
     }
 }

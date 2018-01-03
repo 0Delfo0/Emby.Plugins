@@ -17,31 +17,39 @@ namespace Lastfm.Api
     {
         private readonly IHttpClient _httpClient;
         private readonly IJsonSerializer _jsonSerializer;
-        protected readonly ILogger Logger;
 
-        protected BaseLastfmApiClient(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger)
+        protected BaseLastfmApiClient(IHttpClient httpClient, IJsonSerializer jsonSerializer)
         {
-            Logger = logger;
             _httpClient = httpClient;
             _jsonSerializer = jsonSerializer;
         }
 
         protected async Task<TResponse> Post<TRequest, TResponse>(TRequest request) where TRequest : BaseAuthedRequest where TResponse : BaseResponse
         {
+            Plugin.Logger.Info("request: {0}", request.ToString());
+
             var data = request.ToDictionary();
+
+            Plugin.Logger.Info("data: {0}", data);
             //Append the signature
             Helpers.AppendSignature(ref data);
+            Plugin.Logger.Info("data1: {0}", data);
+
+            Plugin.Logger.Info("JSON REQ: {0}", _jsonSerializer.SerializeToString(request));
+
+            Plugin.Logger.Info("JSON1 REQ: {0}", _jsonSerializer.SerializeToString(data));
 
             using(var httpResponseInfo = await _httpClient.Post(new HttpRequestOptions
             {
                 Url = BuildPostUrl(request.Secure),
                 ResourcePool = Plugin.LastfmResourcePool,
                 RequestContentType = "application/json",
-                RequestContent = _jsonSerializer.SerializeToString(request),
+                RequestContent = _jsonSerializer.SerializeToString(data),
                 CancellationToken = CancellationToken.None,
                 TimeoutMs = 120000,
                 LogErrorResponseBody = false,
                 LogRequest = true,
+                LogErrors = true,
                 BufferContent = false,
                 EnableHttpCompression = false,
                 EnableKeepAlive = false
@@ -53,13 +61,13 @@ namespace Lastfm.Api
 
                     //Lets Log the error here to ensure all errors are logged
                     if(result.IsError())
-                        Logger.Error(result.message);
+                        Plugin.Logger.Error(result.message);
 
                     return result;
                 }
                 catch(Exception e)
                 {
-                    Logger.Debug(e.Message);
+                    Plugin.Logger.Debug(e.Message);
                 }
 
                 return null;
@@ -87,13 +95,13 @@ namespace Lastfm.Api
 
                     //Lets Log the error here to ensure all errors are logged
                     if(result.IsError())
-                        Logger.Error(result.message);
+                        Plugin.Logger.Error(result.message);
 
                     return result;
                 }
                 catch(Exception e)
                 {
-                    Logger.Debug(e.Message);
+                    Plugin.Logger.Debug(e.Message);
                 }
 
                 return null;

@@ -8,7 +8,6 @@ using Lastfm.Api.Model.Objects.Track;
 using Lastfm.Resources;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
 
 namespace Lastfm.Utils
 {
@@ -77,11 +76,11 @@ namespace Lastfm.Utils
         }
 
         //The nuget doesn't seem to have GetProviderId for artists
-        public static string GetMusicBrainzArtistId(MusicArtist artist, ILogger logger)
+        public static string GetMusicBrainzArtistId(MusicArtist artist)
         {
             if(artist.ProviderIds == null)
             {
-                logger.Debug("No provider id: {0}", artist.Name);
+                Plugin.Logger.Debug("No provider id: {0}", artist.Name);
                 return null;
             }
 
@@ -89,16 +88,16 @@ namespace Lastfm.Utils
             {
                 return mbArtistId;
             }
-            logger.Debug("No GetMusicBrainzArtistId MBID: {0}", artist.Name);
+            Plugin.Logger.Debug("No GetMusicBrainzArtistId MBID: {0}", artist.Name);
 
             return null;
         }
 
-        public static string GetMusicBrainzTrackId(Audio audio, ILogger logger)
+        public static string GetMusicBrainzTrackId(Audio audio)
         {
             if(audio.ProviderIds == null)
             {
-                logger.Debug("No provider id: {0}", audio.Name);
+                Plugin.Logger.Debug("No provider id: {0}", audio.Name);
                 return null;
             }
 
@@ -106,7 +105,7 @@ namespace Lastfm.Utils
             {
                 return mbArtistId;
             }
-            logger.Debug("No GetMusicBrainzTrackId MBID: {0}", audio.Name);
+            Plugin.Logger.Debug("No GetMusicBrainzTrackId MBID: {0}", audio.Name);
 
             return null;
         }

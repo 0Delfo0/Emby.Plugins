@@ -1,4 +1,8 @@
-﻿using Lastfm.Api;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Lastfm.Api;
+using Lastfm.Api.Model.Objects.Track;
+using Lastfm.Configuration.Model;
 using Lastfm.Resources;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Logging;
@@ -17,17 +21,33 @@ namespace Lastfm
     public class RestApi : IService
     {
         private readonly LastfmApi _lastfmApi;
-        private readonly ILogger _logger;
 
-        public RestApi(IJsonSerializer jsonSerializer, IHttpClient httpClient, ILogManager logManager)
+        public RestApi(IJsonSerializer jsonSerializer, IHttpClient httpClient)
         {
-            _logger = logManager.GetLogger(PluginConst.ThisPlugin.Name);
-            _lastfmApi = new LastfmApi(httpClient, jsonSerializer, _logger);
+            _lastfmApi = new LastfmApi(httpClient, jsonSerializer);
         }
 
         public object Post(Login request)
         {
-            return _lastfmApi.RequestSession(request.Username, request.Password);
+            var track = new LfmTrack
+            {
+                name = "Orion"
+            };
+
+            var user = new LfmUser
+            {
+                Username = "Delfo78"
+            };
+
+            var res =  _lastfmApi.TrackGetInfo(user, track, CancellationToken.None);
+
+           
+
+            Task.WaitAll(res);
+            
+            Plugin.Logger.Info("res {0}", res.Result.track.mbid);
+            
+            return _lastfmApi.AuthGetMobileSession(request.Username, request.Password).ConfigureAwait(false);
         }
     }
 }

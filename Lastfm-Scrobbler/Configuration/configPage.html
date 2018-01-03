@@ -4,7 +4,7 @@
     <title>Last.fm Scrobbler Configuration</title>
 </head>
 <body>
-<div id="LastfmScrobblerConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
+<div id="lastfmConfigurationPage" data-role="page" class="page type-interior lastfmConfigurationPage pluginConfigurationPage ">
 
     <div data-role="content">
         <div class="content-primary">
@@ -40,7 +40,7 @@
 
     <script type="text/javascript">
 
-        var LastfmScrobblerConfigurationPage = {
+        var lastfmConfigurationPage = {
             _pluginUniqueId: "82b5fb21-e174-40a1-a335-d1a19b03d175",
             _users: [],
             _config: [],
@@ -128,7 +128,7 @@
                 if (!userConfig) {
                     userConfig = $.extend({}, this.configDefaults, {MediaBrowserUserId: this.getCurrentSelectedUserId()});
 
-                    this._config.LastfmUsers.push(userConfig);
+                    this._config.LfmUsers.push(userConfig);
                 }
 
                 //Attach current option settings to 
@@ -181,7 +181,7 @@
                 //Get the current user
                 var currentUserId = this.getCurrentSelectedUserId();
 
-                var currentUser = this._config.LastfmUsers.filter(function (user) {
+                var currentUser = this._config.LfmUsers.filter(function (user) {
                     return user.MediaBrowserUserId == currentUserId;
                 })[0];
 
@@ -248,7 +248,7 @@
                 this.loadConfiguration().then($.proxy(function () {
 
                     //Remove the config for the current user
-                    this._config.LastfmUsers = $.grep(this._config.LastfmUsers, function (user) {
+                    this._config.LfmUsers = $.grep(this._config.LfmUsers, function (user) {
                         return user.MediaBrowserUserId != currentUserId;
                     });
 
@@ -262,8 +262,8 @@
             }
         };
 
-        $('#LastfmScrobblerConfigurationPage').on('pageshow', function () {
-            LastfmScrobblerConfigurationPage.init($(this));
+        $('#lastfmConfigurationPage').on('pageshow', function () {
+            lastfmConfigurationPage.init($(this));
         });
 
         //Add my own methods to the api client
@@ -284,7 +284,10 @@
                 url: url,
                 data: JSON.stringify(data),
                 contentType: "application/json",
-                dataType: 'json'
+                dataType: 'json',
+                error: function (xhr, ajaxOptions, thrownError) {
+                    throw new Error("Login Error", xhr.status, thrownError);
+                }
             });
         };
     </script>

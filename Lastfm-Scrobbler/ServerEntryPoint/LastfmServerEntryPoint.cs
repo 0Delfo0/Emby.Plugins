@@ -20,7 +20,6 @@ namespace Lastfm.ServerEntryPoint
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
         private LastfmApi _lastfmApi;
-        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the instance.
@@ -29,12 +28,11 @@ namespace Lastfm.ServerEntryPoint
         public static LastfmServerEntryPoint Instance { get; private set; }
 
         public LastfmServerEntryPoint(ISessionManager sessionManager, IJsonSerializer jsonSerializer,
-            IHttpClient httpClient, ILogManager logManager, IUserDataManager userDataManager)
+            IHttpClient httpClient, IUserDataManager userDataManager)
         {
-            _logger = logManager.GetLogger(Plugin.Instance.Name);
             _sessionManager = sessionManager;
             _userDataManager = userDataManager;
-            _lastfmApi = new LastfmApi(httpClient, jsonSerializer, _logger);
+            _lastfmApi = new LastfmApi(httpClient, jsonSerializer);
             Instance = this;
         }
 
@@ -65,13 +63,13 @@ namespace Lastfm.ServerEntryPoint
             var lastfmUser = UserHelpers.GetUser(e.UserId);
             if(lastfmUser == null)
             {
-                _logger.Debug("Could not find user");
+                Plugin.Logger.Debug("Could not find user");
                 return;
             }
 
             if(string.IsNullOrWhiteSpace(lastfmUser.SessionKey))
             {
-                _logger.Info("No session key present, aborting");
+                Plugin.Logger.Info("No session key present, aborting");
                 return;
             }
 
@@ -99,7 +97,7 @@ namespace Lastfm.ServerEntryPoint
             //Make sure the track has been fully played
             if(!e.PlayedToCompletion)
             {
-                _logger.Debug("'{0}' not played to completion, not scrobbling", item.Name);
+                Plugin.Logger.Debug("'{0}' not played to completion, not scrobbling", item.Name);
                 return;
             }
 
@@ -107,41 +105,41 @@ namespace Lastfm.ServerEntryPoint
             //Make sure 80% of the track has been played back
             if(e.PlaybackPositionTicks == null)
             {
-                _logger.Debug("Playback ticks for {0} is null", item.Name);
+                Plugin.Logger.Debug("Playback ticks for {0} is null", item.Name);
                 return;
             }
 
             var playPercent = (double) e.PlaybackPositionTicks / item.RunTimeTicks * 100;
             if(playPercent < 80)
             {
-                _logger.Debug("'{0}' only played {1}%, not scrobbling", item.Name, playPercent);
+                Plugin.Logger.Debug("'{0}' only played {1}%, not scrobbling", item.Name, playPercent);
                 return;
             }
 
             var user = e.Users.FirstOrDefault();
             if(user == null)
             {
-                _logger.Debug("No user");
+                Plugin.Logger.Debug("No user");
                 return;
             }
 
             var lastfmUser = UserHelpers.GetUser(user);
             if(lastfmUser == null)
             {
-                _logger.Debug("Could not find last.fm user");
+                Plugin.Logger.Debug("Could not find last.fm user");
                 return;
             }
 
             //User doesn't want to scrobble
             if(!lastfmUser.Options.Scrobble)
             {
-                _logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
+                Plugin.Logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
                 return;
             }
 
             if(string.IsNullOrWhiteSpace(lastfmUser.SessionKey))
             {
-                _logger.Info("No session key present, aborting");
+                Plugin.Logger.Info("No session key present, aborting");
                 return;
             }
 
@@ -160,27 +158,27 @@ namespace Lastfm.ServerEntryPoint
             var user = e.Users.FirstOrDefault();
             if(user == null)
             {
-                _logger.Debug("No user");
+                Plugin.Logger.Debug("No user");
                 return;
             }
 
             var lastfmUser = UserHelpers.GetUser(user);
             if(lastfmUser == null)
             {
-                _logger.Debug("Could not find last.fm user");
+                Plugin.Logger.Debug("Could not find last.fm user");
                 return;
             }
 
             //User doesn't want to scrobble
             if(!lastfmUser.Options.Scrobble)
             {
-                _logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
+                Plugin.Logger.Debug("{0} ({1}) does not want to scrobble", user.Name, lastfmUser.Username);
                 return;
             }
 
             if(string.IsNullOrWhiteSpace(lastfmUser.SessionKey))
             {
-                _logger.Info("No session key present, aborting");
+                Plugin.Logger.Info("No session key present, aborting");
                 return;
             }
 
