@@ -96,7 +96,7 @@ namespace Lastfm.Api
 
             if(response != null && !response.IsError())
             {
-                Plugin.Logger.Info("{0} is now playing '{1}' - {2} - {3} - {4}", user.Username, request.track, request.album, request.artist, request.mbid);
+                Plugin.Logger.Info("{0} is now playing '{1}' - '{2}' - '{3}' - '{4}'", user.Username, request.track, request.album, request.artist, request.mbid);
                 return;
             }
             Plugin.Logger.Error("Failed to send now playing for track: {0} - messagge {1}", item.Name, response?.message);

@@ -9,7 +9,7 @@ namespace Lastfm.Utils
     {
         public static LfmUser GetUser(User user)
         {
-            if(user == null)
+            if (user == null)
             {
                 return null;
             }
@@ -17,9 +17,23 @@ namespace Lastfm.Utils
             return Plugin.Instance.PluginConfiguration.LfmUsers == null ? null : GetUser(user.Id);
         }
 
-        public static LfmUser GetUser(Guid userId)
+        public static LfmUser GetUser(Guid userGuid)
         {
-            return Plugin.Instance.PluginConfiguration.LfmUsers.FirstOrDefault(u => u.MediaBrowserUserId.Equals(userId.ToString()));
+            return Plugin.Instance.PluginConfiguration.LfmUsers.FirstOrDefault(u =>
+            {
+                if (string.IsNullOrWhiteSpace(u.MediaBrowserUserId))
+                {
+                    return false;
+                }
+
+                Guid mediaBrowserUserIdGuid;
+                if (Guid.TryParse(u.MediaBrowserUserId, out mediaBrowserUserIdGuid) && mediaBrowserUserIdGuid.Equals(userGuid))
+                {
+                    return true;
+                }
+
+                return false;
+            });
         }
 
         public static LfmUser GetUser(string userGuid)

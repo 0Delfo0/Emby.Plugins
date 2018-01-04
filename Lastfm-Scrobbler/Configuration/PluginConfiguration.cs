@@ -16,6 +16,6 @@ namespace Lastfm.Configuration
             LfmUsers = new LfmUser[] { };
         }
 
-        public LfmUser[] LfmUsers { get; }
+        public LfmUser[] LfmUsers { get; set; }
     }
 }
